@@ -10,9 +10,22 @@
 		B12D4A512CB31648003B3730 /* Prototipofinal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Prototipofinal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B12D4B2C2CB350BA003B3730 /* Exceptions for "Prototipofinal" folder in "Prototipofinal" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B12D4A502CB31648003B3730 /* Prototipofinal */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B12D4A532CB31648003B3730 /* Prototipofinal */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B12D4B2C2CB350BA003B3730 /* Exceptions for "Prototipofinal" folder in "Prototipofinal" target */,
+			);
 			path = Prototipofinal;
 			sourceTree = "<group>";
 		};
@@ -254,7 +267,14 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Prototipofinal/Preview Content\"";
 				DEVELOPMENT_TEAM = Q3G82NPXA6;
 				ENABLE_PREVIEWS = YES;
+				EXCLUDED_ARCHS = "";
+				"EXCLUDED_ARCHS[sdk=*]" = "";
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "";
+				INFOPLIST_FILE = Prototipofinal/Info.plist;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "se necesita para imprimir";
+				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "se necesita par imprimir";
+				INFOPLIST_KEY_NSCameraUsageDescription = "se necesita para escanear";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -264,10 +284,15 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Prototipofinal/lib",
+				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = frank.Prototipofinal;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Prototipofinal/zebraPrinterTester-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -283,7 +308,13 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Prototipofinal/Preview Content\"";
 				DEVELOPMENT_TEAM = Q3G82NPXA6;
 				ENABLE_PREVIEWS = YES;
+				EXCLUDED_ARCHS = "";
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "";
+				INFOPLIST_FILE = Prototipofinal/Info.plist;
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "se necesita para imprimir";
+				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "se necesita par imprimir";
+				INFOPLIST_KEY_NSCameraUsageDescription = "se necesita para escanear";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -293,10 +324,15 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Prototipofinal/lib",
+				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = frank.Prototipofinal;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Prototipofinal/zebraPrinterTester-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
