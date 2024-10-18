@@ -1,0 +1,24 @@
+{
+  "source": "/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Views/Reportview.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Report View",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 12
+        }
+      },
+      {
+        "comment": "",
+        "key": "Report View",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 6
+        }
+      }
+    ]
+  },
+  "version": 1
+}

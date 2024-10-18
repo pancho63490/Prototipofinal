@@ -21,8 +21,12 @@ class PrintViewController {
             }
             
             // Imprimir la etiqueta
-            self.printLabel(trackingNumber: trackingNumber, invoiceNumber: invoiceNumber, palletNumber: palletNumber, objectID: objectID, connection: connection)
-            
+            self.printLabel(trackingNumber: trackingNumber,
+                            invoiceNumber: invoiceNumber,
+                            objectNumber: palletNumber,  // Cambia 'palletNumber' a 'objectNumber'
+                            objectID: objectID,
+                            connection: connection)
+
             self.closePrinterConnection(connection: connection)
             completion(true, nil)
         }
@@ -49,25 +53,66 @@ class PrintViewController {
             }
         }
     }
-    
-    // Imprimir una etiqueta
-    func printLabel(trackingNumber: String, invoiceNumber: String, palletNumber: Int, objectID: String, connection: ZebraPrinterConnection) {
+    func printLabel(trackingNumber: String, invoiceNumber: String, objectNumber: Int, objectID: String, connection: ZebraPrinterConnection) {
+        // Calibrar la impresora para medios con marcas negras
+        let calibrationZPL = "^XA^JU^XZ"
+        if let calibrationData = calibrationZPL.data(using: .utf8) {
+            connection.write(calibrationData, error: nil)
+            print("Calibración de la impresora realizada.")
+        }
+
+        let currentDateTime = getCurrentDateTime()
         let labelZPL = """
         ^XA
-        ^PW812      // Ancho de la etiqueta de 4 pulgadas
-        ^LL609      // Largo de la etiqueta de 3 pulgadas
-        ^FO50,50^A0,50,50^FDTracking: \(trackingNumber)^FS
-        ^FO50,150^A0,50,50^FDInvoice: \(invoiceNumber)^FS
-        ^FO50,250^A0,50,50^FDPallet: \(palletNumber)^FS
-        ^FO50,350^A0,50,50^FDObjectID: \(objectID)^FS
+        ^MMT
+        ^PW812
+        ^LL1218
+        ^LS0
+        ^MNM
+
+        // Título de la etiqueta
+        ^FT50,100^A0N,60,60^FH\\^FDB O S C H  -  X  D O C K^FS
+        ^FO40,120^GB732,0,4^FS // Línea horizontal debajo del título
+
+        // Tracking Number
+        ^FT50,200^A0N,40,40^FH\\^FDTracking Number:^FS
+        ^FT50,240^A0N,40,40^FH\\^FD\(trackingNumber)^FS
+        ^BY3,3,100^FT50,350^BCN,,Y,N
+        ^FD>:\(trackingNumber)^FS // Código de barras para Tracking Number
+
+        // Object Number
+        ^FT50,480^A0N,40,40^FH\\^FDObject Number: \(objectNumber)^FS
+
+        // Object ID
+        ^FT50,520^A0N,40,40^FH\\^FDObject ID: \(objectID)^FS
+        ^BY3,3,100^FT50,630^BCN,,Y,N
+        ^FD>:\(objectID)^FS // Código de barras para Object ID
+
+        // Fecha y Hora de llegada
+        ^FT50,760^A0N,40,40^FH\\^FDDate Time: \(currentDateTime)^FS
+
+        ^PQ1,0,1,Y
         ^XZ
         """
-        
-        let data = labelZPL.data(using: .utf8)!
+
+        guard let data = labelZPL.data(using: .utf8) else {
+            print("Error: No se pudo convertir el ZPL a datos.")
+            return
+        }
+
         connection.write(data, error: nil)
-        print("Etiqueta del pallet \(palletNumber) enviada con ObjectID: \(objectID).")
+        print("Etiqueta del object \(objectNumber) enviada con ObjectID: \(objectID).")
     }
-    
+
+    // Función auxiliar para obtener la fecha y hora actuales
+    func getCurrentDateTime() -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        return dateFormatter.string(from: Date())
+    }
+
+
+
     // Cerrar la conexión con la impresora
     func closePrinterConnection(connection: ZebraPrinterConnection) {
         connection.close()

@@ -112,3 +112,56 @@ struct CameraScannerView: UIViewControllerRepresentable {
         }
     }
 }
+
+struct CameraScannerWrapperView: View {
+    @Binding var scannedCode: String?
+    @Environment(\.presentationMode) var presentationMode // Para cerrar la vista
+    var onCodeScanned: ((String) -> Void)?
+
+    var body: some View {
+        ZStack {
+            // Camera scanner view
+            CameraScannerView(scannedCode: $scannedCode, onCodeScanned: { code in
+                scannedCode = code
+                if let onCodeScanned = onCodeScanned {
+                    onCodeScanned(code)
+                }
+                self.presentationMode.wrappedValue.dismiss() // Cierra la vista
+            })
+            .edgesIgnoringSafeArea(.all)
+
+            // Green rectangle for scan area, centered correctly
+            Rectangle()
+                .stroke(Color.green, lineWidth: 4)
+                .frame(width: 350, height: 150)
+                .position(
+                    x: UIScreen.main.bounds.midX,
+                    y: UIScreen.main.bounds.midY - 65 // Adjust vertically to center
+                )
+
+            // Cancel button at the bottom center
+            VStack {
+                Spacer()
+                Button(action: {
+                    self.presentationMode.wrappedValue.dismiss() // Cierra la vista
+                }) {
+                    Text("Cancelar")
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color.red.opacity(0.8))
+                        .cornerRadius(8)
+                }
+                .padding(.bottom, 50)
+            }
+        }
+    }
+}
+
+// Previews
+struct CameraScannerWrapperView_Previews: PreviewProvider {
+    @State static var scannedCode: String? = nil
+
+    static var previews: some View {
+        CameraScannerWrapperView(scannedCode: $scannedCode)
+    }
+}

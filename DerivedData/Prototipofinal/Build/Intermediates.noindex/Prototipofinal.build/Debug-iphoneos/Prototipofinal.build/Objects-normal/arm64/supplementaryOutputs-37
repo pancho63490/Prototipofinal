@@ -1,0 +1,18 @@
+"/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Views/Camarapdfview.swift":
+  swift-dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Camarapdfview.swiftdeps"
+  dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Camarapdfview.d"
+  const-values: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Camarapdfview.swiftconstvalues"
+  diagnostics: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Camarapdfview.dia"
+  object: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Camarapdfview.o"
+"/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Views/Mainmenu/Verificationview.swift":
+  swift-dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Verificationview.swiftdeps"
+  const-values: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Verificationview.swiftconstvalues"
+  dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Verificationview.d"
+  object: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Verificationview.o"
+  diagnostics: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Verificationview.dia"
+"/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Views/Barcodeview.swift":
+  swift-dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Barcodeview.swiftdeps"
+  diagnostics: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Barcodeview.dia"
+  const-values: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Barcodeview.swiftconstvalues"
+  dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Barcodeview.d"
+  object: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Barcodeview.o"

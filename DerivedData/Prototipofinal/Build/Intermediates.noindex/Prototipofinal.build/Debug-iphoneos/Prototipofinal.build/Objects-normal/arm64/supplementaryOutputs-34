@@ -1,0 +1,24 @@
+"/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Controllers/imagenpicker.swift":
+  swift-dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/imagenpicker.swiftdeps"
+  dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/imagenpicker.d"
+  diagnostics: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/imagenpicker.dia"
+  object: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/imagenpicker.o"
+  const-values: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/imagenpicker.swiftconstvalues"
+"/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Controllers/PrinterRepresentable.swift":
+  swift-dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/PrinterRepresentable.swiftdeps"
+  object: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/PrinterRepresentable.o"
+  dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/PrinterRepresentable.d"
+  const-values: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/PrinterRepresentable.swiftconstvalues"
+  diagnostics: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/PrinterRepresentable.dia"
+"/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Models/Models.swift":
+  const-values: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Models.swiftconstvalues"
+  diagnostics: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Models.dia"
+  dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Models.d"
+  swift-dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Models.swiftdeps"
+  object: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Models.o"
+"/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Models/ModelTraking.swift":
+  dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/ModelTraking.d"
+  const-values: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/ModelTraking.swiftconstvalues"
+  diagnostics: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/ModelTraking.dia"
+  swift-dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/ModelTraking.swiftdeps"
+  object: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/ModelTraking.o"

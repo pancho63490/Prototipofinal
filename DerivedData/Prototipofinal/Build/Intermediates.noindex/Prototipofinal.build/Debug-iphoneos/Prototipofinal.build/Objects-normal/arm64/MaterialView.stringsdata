@@ -1,0 +1,32 @@
+{
+  "source": "/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Views/Mainmenu/MaterialView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Lista de Materiales",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 17
+        }
+      },
+      {
+        "comment": "",
+        "key": "No hay materiales disponibles.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 22
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cantidad: %lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 29
+        }
+      }
+    ]
+  },
+  "version": 1
+}

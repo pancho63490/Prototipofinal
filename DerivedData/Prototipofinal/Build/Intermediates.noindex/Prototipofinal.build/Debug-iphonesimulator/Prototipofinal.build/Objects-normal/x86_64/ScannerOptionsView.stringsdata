@@ -1,0 +1,208 @@
+{
+  "source": "/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Views/ScannerOptionsView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Verificación de Materiales",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 131
+        }
+      },
+      {
+        "comment": "",
+        "key": "Verificación de Materiales",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 35
+        }
+      },
+      {
+        "comment": "",
+        "key": "Object ID: %@",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 42
+        }
+      },
+      {
+        "comment": "",
+        "key": "Ubicación Asignada:",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 47
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cambiar Ubicación",
+        "location": {
+          "startingColumn": 74,
+          "startingLine": 59
+        }
+      },
+      {
+        "comment": "",
+        "key": "Asignar Ubicación",
+        "location": {
+          "startingColumn": 97,
+          "startingLine": 59
+        }
+      },
+      {
+        "comment": "",
+        "key": "Material: %@",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 68
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cantidad: %lld",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 70
+        }
+      },
+      {
+        "comment": "",
+        "key": "Agregar Material",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 80
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cantidades Restantes:",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 92
+        }
+      },
+      {
+        "comment": "",
+        "key": "Restante: %lld",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 103
+        }
+      },
+      {
+        "comment": "",
+        "key": "Enviar",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 122
+        }
+      },
+      {
+        "comment": "",
+        "key": "Agregar Material",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 150
+        }
+      },
+      {
+        "comment": "",
+        "key": "Material",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 156
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cantidad",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 170
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancelar",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 184
+        }
+      },
+      {
+        "comment": "",
+        "key": "Agregar",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 191
+        }
+      },
+      {
+        "comment": "",
+        "key": "Error",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 223
+        }
+      },
+      {
+        "comment": "",
+        "key": "Aceptar",
+        "location": {
+          "startingColumn": 99,
+          "startingLine": 223
+        }
+      },
+      {
+        "comment": "",
+        "key": "Éxito",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 227
+        }
+      },
+      {
+        "comment": "",
+        "key": "Datos enviados correctamente.",
+        "location": {
+          "startingColumn": 56,
+          "startingLine": 227
+        }
+      },
+      {
+        "comment": "",
+        "key": "Aceptar",
+        "location": {
+          "startingColumn": 119,
+          "startingLine": 227
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cantidades Faltantes",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 232
+        }
+      },
+      {
+        "comment": "",
+        "key": "Continuar",
+        "location": {
+          "startingColumn": 50,
+          "startingLine": 234
+        }
+      },
+      {
+        "comment": "",
+        "key": "Cancelar",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 237
+        }
+      }
+    ]
+  },
+  "version": 1
+}

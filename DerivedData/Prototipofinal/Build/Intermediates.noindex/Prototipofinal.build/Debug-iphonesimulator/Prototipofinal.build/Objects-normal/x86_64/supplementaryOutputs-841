@@ -1,0 +1,18 @@
+"/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Views/Camarapdfview.swift":
+  dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/Camarapdfview.d"
+  swift-dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/Camarapdfview.swiftdeps"
+  object: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/Camarapdfview.o"
+  diagnostics: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/Camarapdfview.dia"
+  const-values: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/Camarapdfview.swiftconstvalues"
+"/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Views/MainView.swift":
+  diagnostics: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/MainView.dia"
+  dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/MainView.d"
+  const-values: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/MainView.swiftconstvalues"
+  object: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/MainView.o"
+  swift-dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/MainView.swiftdeps"
+"/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Views/ManualView.swift":
+  dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/ManualView.d"
+  diagnostics: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/ManualView.dia"
+  object: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/ManualView.o"
+  swift-dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/ManualView.swiftdeps"
+  const-values: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/ManualView.swiftconstvalues"

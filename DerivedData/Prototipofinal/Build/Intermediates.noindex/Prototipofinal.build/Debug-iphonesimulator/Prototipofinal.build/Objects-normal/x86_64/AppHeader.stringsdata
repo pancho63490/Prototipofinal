@@ -1,0 +1,16 @@
+{
+  "source": "/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Views/Mainmenu/AppHeader.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "NixiScan",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 12
+        }
+      }
+    ]
+  },
+  "version": 1
+}

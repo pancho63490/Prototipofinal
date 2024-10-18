@@ -1,0 +1,16 @@
+{
+  "source": "/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Controllers/Barcodecontroller.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Cancelar",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 148
+        }
+      }
+    ]
+  },
+  "version": 1
+}

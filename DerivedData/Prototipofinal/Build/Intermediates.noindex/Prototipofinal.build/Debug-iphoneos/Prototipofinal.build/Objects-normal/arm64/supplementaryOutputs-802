@@ -1,0 +1,18 @@
+"/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Api/Apimanual.swift":
+  object: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Apimanual.o"
+  dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Apimanual.d"
+  swift-dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Apimanual.swiftdeps"
+  const-values: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Apimanual.swiftconstvalues"
+  diagnostics: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Apimanual.dia"
+"/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Controllers/Barcodecontroller.swift":
+  diagnostics: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Barcodecontroller.dia"
+  swift-dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Barcodecontroller.swiftdeps"
+  dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Barcodecontroller.d"
+  const-values: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Barcodecontroller.swiftconstvalues"
+  object: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Barcodecontroller.o"
+"/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Api/Api_Traking.swift":
+  object: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Api_Traking.o"
+  dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Api_Traking.d"
+  const-values: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Api_Traking.swiftconstvalues"
+  swift-dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Api_Traking.swiftdeps"
+  diagnostics: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphoneos/Prototipofinal.build/Objects-normal/arm64/Api_Traking.dia"

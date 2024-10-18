@@ -1,24 +1,28 @@
 import SwiftUI
 
 struct PrintView: View {
-    var trackingNumber: String
-    var invoiceNumber: String
-    var pallets: String
-    
+    var referenceNumber: String
+    var trackingData: [TrackingData]
+    var customLabels: Int
+    var useCustomLabels: Bool
+    @State private var shouldDismiss = false // Estado para manejar la navegación automática
+
+    @Environment(\.presentationMode) var presentationMode // Controla la navegación hacia atrás
+    @Binding var finalObjectIDs: [String] // Para pasar los Object IDs generados a la vista principal
+
     @State private var isPrintingComplete = false
     @State private var currentPallet = 1
-    @State private var palletCount: Int = 0
-    @State private var shouldNavigateToScan = false
     @State private var errorMessage = ""
-    
+    @State private var objectIDs: [String] = [] // Arreglo para almacenar los Object IDs como cadenas
+
     var body: some View {
         VStack {
             Text("Impresión en Proceso")
                 .font(.title)
                 .padding()
-            
+
             if !isPrintingComplete {
-                ProgressView("Imprimiendo \(currentPallet) de \(palletCount) pallets...")
+                ProgressView("Imprimiendo \(currentPallet) de \(useCustomLabels ? customLabels : distinctMaterialCount()) etiquetas...")
                     .progressViewStyle(CircularProgressViewStyle())
                     .padding()
             } else {
@@ -26,12 +30,8 @@ struct PrintView: View {
                     .foregroundColor(.green)
                     .font(.headline)
                     .padding()
-                
-                NavigationLink(destination: ScanView(), isActive: $shouldNavigateToScan) {
-                    EmptyView()
-                }
             }
-            
+
             if !errorMessage.isEmpty {
                 Text("Error: \(errorMessage)")
                     .foregroundColor(.red)
@@ -39,40 +39,86 @@ struct PrintView: View {
             }
         }
         .onAppear {
-            startPrintProcess()
+            requestObjectIDsAndStartPrintProcess()
+        }
+        .onChange(of: isPrintingComplete) { complete in
+            if complete {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) { // Espera 2 segundos antes de regresar automáticamente
+                    self.finalObjectIDs = objectIDs // Pasamos los object IDs generados
+                    self.presentationMode.wrappedValue.dismiss() // Regresar automáticamente al menú principal
+                }
+            }
         }
     }
-    
-    // Función para iniciar el proceso de impresión
-    func startPrintProcess() {
-        guard let totalPallets = Int(pallets), totalPallets > 0 else {
-            errorMessage = "Número de pallets no válido."
+
+    // Función para contar el número de materiales distintos en trackingData
+    func distinctMaterialCount() -> Int {
+        let uniqueMaterials = Set(trackingData.map { $0.material })
+        return uniqueMaterials.count
+    }
+
+    // Función para solicitar Object IDs a la API y luego iniciar el proceso de impresión
+    func requestObjectIDsAndStartPrintProcess() {
+        let totalLabels = useCustomLabels ? customLabels : distinctMaterialCount()
+        guard let firstTrackingData = trackingData.first else {
+            self.errorMessage = "No hay datos de seguimiento disponibles."
             return
         }
-        
-        palletCount = totalPallets
+
+        let requestData = [
+            "REF_NUM": firstTrackingData.externalDeliveryID,
+            "QTY": totalLabels
+        ] as [String : Any]
+
+        APIServiceobj().requestObjectIDs(requestData: requestData) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let objectIDResponse):
+                    guard !objectIDResponse.objectIDs.isEmpty else {
+                        self.errorMessage = "No se obtuvieron Object IDs de la API."
+                        return
+                    }
+                    self.objectIDs = objectIDResponse.objectIDs.map { String($0) }
+                    self.startPrintProcess() // Inicia la impresión después de obtener los Object IDs
+                case .failure(let error):
+                    self.errorMessage = "Error al obtener Object IDs: \(error.localizedDescription)"
+                }
+            }
+        }
+    }
+
+    // Función para iniciar el proceso de impresión después de obtener los Object IDs
+    func startPrintProcess() {
         currentPallet = 1
-        
         let printController = PrintViewController()
         printNextPallet(printController: printController)
     }
-    
-    // Función para imprimir cada pallet con su ObjectID
+
+    // Función para imprimir cada etiqueta utilizando los Object IDs
     func printNextPallet(printController: PrintViewController) {
-        guard currentPallet <= palletCount else {
+        let totalLabels = useCustomLabels ? customLabels : distinctMaterialCount()
+
+        guard currentPallet <= totalLabels else {
             isPrintingComplete = true
-            shouldNavigateToScan = true
             return
         }
-        
-        let objectID = generateShortUUID() // Generar ObjectID corto de 6 caracteres
-        
-        printController.startPrinting(trackingNumber: trackingNumber, invoiceNumber: invoiceNumber, palletNumber: currentPallet, objectID: objectID) { success, error in
+
+        guard !objectIDs.isEmpty else {
+            self.errorMessage = "No hay Object IDs disponibles para imprimir."
+            return
+        }
+
+        let objectID = useCustomLabels || currentPallet > objectIDs.count ? "CustomLabel-\(currentPallet)" : objectIDs[currentPallet - 1]
+
+        printController.startPrinting(trackingNumber: referenceNumber,
+                                      invoiceNumber: referenceNumber,
+                                      palletNumber: currentPallet,
+                                      objectID: objectID) { success, error in
             if success {
                 DispatchQueue.main.async {
-                    print("Pallet \(self.currentPallet) impreso con ObjectID: \(objectID)")
+                    print("Etiqueta \(self.currentPallet) impresa con ObjectID: \(objectID)")
                     self.currentPallet += 1
-                    self.printNextPallet(printController: printController) // Continuar con el siguiente pallet
+                    self.printNextPallet(printController: printController) // Continuar con la siguiente etiqueta
                 }
             } else if let error = error {
                 DispatchQueue.main.async {
@@ -80,11 +126,5 @@ struct PrintView: View {
                 }
             }
         }
-    }
-    
-    func generateShortUUID(length: Int = 6) -> String {
-        let uuid = UUID().uuidString // Genera un UUID
-        let shortUUID = String(uuid.prefix(length)) // Toma los primeros `length` caracteres
-        return shortUUID
     }
 }

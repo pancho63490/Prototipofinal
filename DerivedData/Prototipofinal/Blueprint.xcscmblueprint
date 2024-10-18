@@ -1,0 +1,23 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "EC340B922C18B533CEE179723AD29A01DA9EB977",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "EC340B922C18B533CEE179723AD29A01DA9EB977" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "3E01AC2F-F226-4CE4-8DE4-35440F0D4931",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "EC340B922C18B533CEE179723AD29A01DA9EB977" : "Prototipofinal\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "Prototipofinal",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "Prototipofinal.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/pancho63490\/Prototipofinal.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "EC340B922C18B533CEE179723AD29A01DA9EB977"
+    }
+  ]
+}

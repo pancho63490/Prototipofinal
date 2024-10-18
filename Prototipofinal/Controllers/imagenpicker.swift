@@ -6,7 +6,7 @@ struct DocumentCameraView: UIViewControllerRepresentable {
     @Binding var recognizedText: String
     @Binding var showAlert: Bool
     @Binding var scannedImages: [UIImage]
-    @Binding var isDocumentScanning: Bool // Vinculación para controlar si el escáner está activo
+    @Binding var isDocumentScanning: Bool
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -38,10 +38,10 @@ struct DocumentCameraView: UIViewControllerRepresentable {
 
                     let recognizedStrings = observations.compactMap { observation in
                         let candidate = observation.topCandidates(1).first
-                        return candidate?.confidence ?? 0 >= 0.8 ? candidate?.string : nil
+                        return candidate?.string
                     }
 
-                    recognizedTexts.append(recognizedStrings.joined(separator: "\n"))
+                    recognizedTexts.append(contentsOf: recognizedStrings)
                 }
 
                 textRecognitionRequest.recognitionLevel = .accurate
@@ -63,19 +63,95 @@ struct DocumentCameraView: UIViewControllerRepresentable {
                         }
                     }
 
-                    // Mostrar el texto reconocido en el hilo principal
+                    // Procesar el texto final
                     DispatchQueue.main.async {
-                        self.parent.recognizedText = recognizedTexts.joined(separator: "\n")
+                        let fullText = recognizedTexts.joined(separator: "\n")
+                        self.parent.recognizedText = fullText
+
+                        // Extraer el material y la cantidad
+                        let materials = self.extractMaterials(from: fullText)
+                        let quantity = self.extractQuantity(from: fullText)
+
+                        print("Materiales encontrados: \(materials)")
+                        print("Cantidad encontrada: \(quantity)")
+
+                        self.parent.recognizedText = "Materiales: \(materials.joined(separator: ", ")), Cantidad: \(quantity)"
                         self.parent.showAlert = true
-                        self.parent.isDocumentScanning = false // Cerrar el escáner
+                        self.parent.isDocumentScanning = false
                     }
                 }
             }
         }
 
+        // Método para extraer los materiales según patrones
+        func extractMaterials(from text: String) -> [String] {
+            let materialPattern = "(SP\\w{1,15}|F03B\\w{1,15}|33\\w{1,15}|16\\w{1,15})"
+            var materials = [String]()
+
+            do {
+                let regex = try NSRegularExpression(pattern: materialPattern, options: [])
+                let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: text.utf16.count))
+
+                for match in matches {
+                    if let range = Range(match.range, in: text) {
+                        let matchedText = String(text[range])
+                        materials.append(matchedText)
+                    }
+                }
+            } catch {
+                print("Error al crear la expresión regular: \(error.localizedDescription)")
+            }
+
+            return materials
+        }
+
+        // Método para extraer la cantidad cercana a palabras clave
+        func extractQuantity(from text: String) -> String {
+            let quantityKeywords = ["QTY", "QUANTITY", "CANTIDAD"]
+            let lines = text.components(separatedBy: "\n")
+            var quantity: String = ""
+
+            for (index, line) in lines.enumerated() {
+                for keyword in quantityKeywords {
+                    if line.uppercased().contains(keyword) {
+                        // Buscar la línea siguiente o un número cercano
+                        if index + 1 < lines.count {
+                            let nextLine = lines[index + 1]
+                            if let number = extractNumber(from: nextLine) {
+                                return number
+                            }
+                        }
+
+                        // También buscar en la misma línea
+                        if let number = extractNumber(from: line) {
+                            return number
+                        }
+                    }
+                }
+            }
+
+            return quantity
+        }
+
+        // Método para extraer el primer número que encuentre en una cadena
+        func extractNumber(from text: String) -> String? {
+            let numberPattern = "\\d+"
+            do {
+                let regex = try NSRegularExpression(pattern: numberPattern, options: [])
+                let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: text.utf16.count))
+
+                if let match = matches.first, let range = Range(match.range, in: text) {
+                    return String(text[range])
+                }
+            } catch {
+                print("Error al crear la expresión regular: \(error.localizedDescription)")
+            }
+
+            return nil
+        }
+
         func documentCameraViewControllerDidCancel(_ controller: VNDocumentCameraViewController) {
             controller.dismiss(animated: true) {
-                // Volver al ContentView actualizando el estado
                 self.parent.isDocumentScanning = false
             }
         }
@@ -83,7 +159,6 @@ struct DocumentCameraView: UIViewControllerRepresentable {
         func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFailWithError error: Error) {
             controller.dismiss(animated: true) {
                 print("Error: \(error.localizedDescription)")
-                // Asegurarse de cerrar la vista en caso de error
                 self.parent.isDocumentScanning = false
             }
         }

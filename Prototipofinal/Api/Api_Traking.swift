@@ -1,48 +1,42 @@
 import Foundation
 
-class APIManager {
-    static let shared = APIManager()
-    
-    // Función para enviar los valores a la API
-    func submitShipment(trackingNumber: String, invoiceNumber: String, pallets: String, shipmentType: String, completion: @escaping (Bool) -> Void) {
+// Definición del servicio API
+struct APIService {
+    func fetchData(referenceNumber: String, completion: @escaping (Result<[TrackingData], Error>) -> Void) {
+        // Reemplazamos {v} con el valor del referenceNumber
+        let urlString = "https://ews-emea.api.bosch.com/Api_XDock/api/search/\(referenceNumber)"
         
-        // Parámetros a enviar
-        let parameters: [String: Any] = [
-            "trackingNumber": trackingNumber,
-            "invoiceNumber": invoiceNumber,
-            "pallets": pallets,
-            "shipmentType": shipmentType
-        ]
-        
-        // Convertir el diccionario a JSON
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: parameters) else {
-            print("Error serializando los datos.")
-            completion(false)
+        guard let url = URL(string: urlString) else {
+            completion(.failure(NSError(domain: "", code: 400, userInfo: [NSLocalizedDescriptionKey: "URL inválida"])))
             return
         }
-        
-        // URL de la API
-        let url = URL(string: "https://example.com/api/shipment")! // Reemplaza con la URL de tu API
-        
-        // Crear la solicitud
+
         var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = jsonData
-        
-        // Enviar la solicitud
+        request.httpMethod = "GET"
+
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
-                print("Error en la solicitud: \(error)")
-                completion(false)
+                completion(.failure(error))
                 return
             }
-            
-            // Procesar la respuesta de la API
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
-                completion(true) // Continuar a la siguiente vista
-            } else {
-                completion(false) // Error en la API
+
+            guard let data = data else {
+                completion(.failure(NSError(domain: "", code: 400, userInfo: [NSLocalizedDescriptionKey: "Datos inválidos"])))
+                return
+            }
+
+            // Imprimir datos crudos para depurar
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("Raw JSON Response: \(jsonString)")
+            }
+
+            do {
+                let decoder = JSONDecoder()
+                let apiResponse = try decoder.decode(DeliveryResponse.self, from: data)
+                completion(.success(apiResponse.deliveries))  // Retorna el array de TrackingData
+            } catch {
+                print("Decoding Error: \(error.localizedDescription)")
+                completion(.failure(error))
             }
         }
         

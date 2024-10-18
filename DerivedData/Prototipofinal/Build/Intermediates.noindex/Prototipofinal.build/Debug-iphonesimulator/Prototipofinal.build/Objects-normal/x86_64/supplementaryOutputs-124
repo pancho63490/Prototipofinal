@@ -1,0 +1,18 @@
+"/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Views/Barcodeview.swift":
+  dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/Barcodeview.d"
+  swift-dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/Barcodeview.swiftdeps"
+  diagnostics: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/Barcodeview.dia"
+  const-values: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/Barcodeview.swiftconstvalues"
+  object: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/Barcodeview.o"
+"/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Models/Zebraprinter.swift":
+  const-values: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/Zebraprinter.swiftconstvalues"
+  dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/Zebraprinter.d"
+  object: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/Zebraprinter.o"
+  swift-dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/Zebraprinter.swiftdeps"
+  diagnostics: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/Zebraprinter.dia"
+"/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Controllers/imagenpicker.swift":
+  const-values: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/imagenpicker.swiftconstvalues"
+  object: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/imagenpicker.o"
+  diagnostics: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/imagenpicker.dia"
+  swift-dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/imagenpicker.swiftdeps"
+  dependencies: "/Users/frankperez/Desktop/swiftair/Prototipofinal/DerivedData/Prototipofinal/Build/Intermediates.noindex/Prototipofinal.build/Debug-iphonesimulator/Prototipofinal.build/Objects-normal/x86_64/imagenpicker.d"

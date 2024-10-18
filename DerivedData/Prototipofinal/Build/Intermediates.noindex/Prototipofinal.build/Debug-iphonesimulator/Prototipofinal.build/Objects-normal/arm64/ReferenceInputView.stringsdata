@@ -1,0 +1,16 @@
+{
+  "source": "/Users/frankperez/Desktop/swiftair/Prototipofinal/Prototipofinal/Views/Mainmenu/ReferenceInputView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Número de referencia",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 9
+        }
+      }
+    ]
+  },
+  "version": 1
+}
