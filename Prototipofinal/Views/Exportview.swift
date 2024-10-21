@@ -17,9 +17,9 @@ struct ExportView: View {
                     if isLoading {
                         ProgressView("Cargando datos...")
                     } else {
-                        List(truckData, id: \.truckNumber) { truck in
-                            Section(header: Text("Camión: \(truck.truckNumber)").font(.headline)) {
-                                ForEach(truck.objectIDs, id: \.self) { objectID in
+                        List(truckData, id: \.id) { truck in
+                            Section(header: Text("Camión: \(truck.deliveryType)").font(.headline)) {
+                                ForEach(truck.uniqueObjectIDs, id: \.self) { objectID in
                                     HStack {
                                         Text("Object ID: \(objectID)")
                                         Spacer()
@@ -38,8 +38,6 @@ struct ExportView: View {
                                     }
                                     .padding(.vertical, 5)
                                 }
-                                
-                                // Botón para marcar como completado y ejecutar la API
                                 if allObjectsScanned(for: truck) {
                                     Button(action: {
                                         markTruckAsCompleted(truck)
@@ -63,24 +61,19 @@ struct ExportView: View {
                 .alert(isPresented: $showErrorAlert) {
                     Alert(title: Text("Error"), message: Text(errorMessage), dismissButton: .default(Text("Aceptar")))
                 }
-                
                 if isScanning {
                     ZStack {
                         Color.black.opacity(0.8)
                             .edgesIgnoringSafeArea(.all)
-                        
                         CameraScannerView(scannedCode: .constant(nil)) { code in
                             validateScannedObjectID(code)
                             isScanning = false
                         }
                         .edgesIgnoringSafeArea(.all)
-
-                        // Zona de interés con recuadro verde
                         Rectangle()
                             .stroke(Color.green, lineWidth: 4)
                             .frame(width: 350, height: 150)
                             .position(x: UIScreen.main.bounds.midX, y: UIScreen.main.bounds.midY - 175)
-
                         VStack {
                             Spacer()
                             Button(action: {
@@ -100,10 +93,10 @@ struct ExportView: View {
         }
     }
 
-    // Lógica para cargar datos desde la API de Mocky
+    // Lógica para cargar datos desde la API
     func fetchTruckData() {
         isLoading = true
-        let urlString = "https://run.mocky.io/v3/37a9fc08-5679-4bbe-b0c1-c2de9f9f2a30"
+        let urlString = "https://run.mocky.io/v3/bc0249e8-c5a3-435a-883c-befce790f5c8"
 
         guard let url = URL(string: urlString) else {
             showError(message: "URL inválida.")
@@ -127,8 +120,10 @@ struct ExportView: View {
                 do {
                     let decodedData = try JSONDecoder().decode([Truck].self, from: data)
                     truckData = decodedData
-                } catch {
-                    showError(message: "Error al decodificar los datos.")
+                    print("Datos decodificados correctamente: \(truckData)")
+                } catch let decodingError {
+                    showError(message: "Error al decodificar los datos: \(decodingError.localizedDescription)")
+                    print("Detalles del error: \(decodingError)")
                 }
             }
         }
@@ -137,24 +132,32 @@ struct ExportView: View {
 
     // Validar si el código escaneado coincide con el Object ID
     func validateScannedObjectID(_ scannedCode: String?) {
-        guard let code = scannedCode, let objectID = currentObjectID else { return }
+        guard let code = scannedCode?.trimmingCharacters(in: .whitespacesAndNewlines),
+              let objectID = currentObjectID?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+            print("Código o ObjectID no válido.")
+            return
+        }
+
+        // Mostrar en la consola ambos valores para comparar
+        print("Código escaneado: '\(code)'")
+        print("ObjectID esperado: '\(objectID)'")
 
         if code == objectID {
             scannedObjectIDs.insert(objectID)
             print("Escaneado correctamente: \(objectID)")
         } else {
             showError(message: "El código escaneado no coincide con el Object ID.")
+            print("Error: Los códigos no coinciden.")
         }
     }
 
     // Verificar si todos los objetos del camión han sido escaneados
     func allObjectsScanned(for truck: Truck) -> Bool {
-        truck.objectIDs.allSatisfy { scannedObjectIDs.contains($0) }
+        truck.uniqueObjectIDs.allSatisfy { scannedObjectIDs.contains($0) }
     }
 
-    // Marcar camión como completado y llamar a la API
     func markTruckAsCompleted(_ truck: Truck) {
-        let urlString = "https://run.mocky.io/v3/37a9fc08-5679-4bbe-b0c1-c2de9f9f2a30" // API para completar
+        let urlString = "https://ews-emea.api.bosch.com/Api_XDock/api/TrukData/UpdateBill"
 
         guard let url = URL(string: urlString) else {
             showError(message: "URL inválida.")
@@ -162,19 +165,22 @@ struct ExportView: View {
         }
 
         var request = URLRequest(url: url)
-        request.httpMethod = "POST"
+        request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
 
+        // Cuerpo de la solicitud con el formato correcto
         let body: [String: Any] = [
-            "truckNumber": truck.truckNumber,
-            "objectIDs": Array(scannedObjectIDs)
+            "DeliveryType": truck.deliveryType
         ]
 
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: body) else {
-            showError(message: "Error al codificar los datos.")
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: body, options: [])
+            request.httpBody = jsonData
+        } catch {
+            showError(message: "Error al codificar los datos: \(error.localizedDescription)")
             return
         }
-        request.httpBody = jsonData
 
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
@@ -182,12 +188,29 @@ struct ExportView: View {
                     showError(message: "Error al enviar datos: \(error.localizedDescription)")
                     return
                 }
-                print("Datos enviados correctamente.")
-                fetchTruckData() // Recargar la vista
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    showError(message: "Respuesta no válida del servidor.")
+                    return
+                }
+
+                if httpResponse.statusCode == 200 {
+                    print("Datos enviados correctamente. Camión: \(truck.deliveryType)")
+                    fetchTruckData() // Recargar los datos después del éxito
+                } else {
+                    if let data = data, let responseBody = String(data: data, encoding: .utf8) {
+                        print("Error en la respuesta del servidor: \(responseBody)")
+                        showError(message: "Error en el servidor: \(responseBody)")
+                    } else {
+                        showError(message: "Error desconocido en el servidor.")
+                    }
+                }
             }
         }
         task.resume()
     }
+
+
 
     // Mostrar error en alerta
     func showError(message: String) {
@@ -196,14 +219,24 @@ struct ExportView: View {
     }
 }
 
-// Modelo de datos para camión y objectIDs
+// Modelo de datos para camiones
 struct Truck: Codable, Identifiable {
     let id = UUID()
-    let truckNumber: String
+    let deliveryType: String
     let objectIDs: [String]
+
+    // Computed property para eliminar duplicados
+    var uniqueObjectIDs: [String] {
+        Array(Set(objectIDs))
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case deliveryType = "DeliveryType"
+        case objectIDs = "ObjectIDs"
+    }
 }
 
-// Preview para probar la vista en Xcode
+// Vista previa para Xcode
 struct ExportView_Previews: PreviewProvider {
     static var previews: some View {
         ExportView()
