@@ -1,3 +1,13 @@
+
+# Archivos generados por Xcode
 DerivedData/
+*.xcworkspace
+*.xcuserdata
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+build/
+
+# Archivos temporales del sistema
+.DS_StoreDerivedData/
 DerivedData/
 DerivedData/
