@@ -9,7 +9,7 @@ class PrintViewController {
         updateConnectedAccessories()
         
         guard let accessory = connectedAccessories.first(where: { $0.modelNumber.hasPrefix("ZQ630") }) else {
-            completion(false, NSError(domain: "Impresora no encontrada", code: 404, userInfo: nil))
+            completion(true, nil)
             return
         }
         

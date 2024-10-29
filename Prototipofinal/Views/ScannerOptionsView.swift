@@ -93,7 +93,9 @@ struct MaterialChecklistView: View {
 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 15) {
-                        ForEach(remainingQuantities.keys.sorted(), id: \.self) { material in
+                        // Enfoque 1: Excluir materiales con cantidad restante de 0
+                        
+                        ForEach(remainingQuantities.keys.filter { remainingQuantities[$0]! > 0 }.sorted(), id: \.self) { material in
                             VStack {
                                 Text(material)
                                     .font(.subheadline)
@@ -105,11 +107,44 @@ struct MaterialChecklistView: View {
                             .background(Color(.systemGray6))
                             .cornerRadius(8)
                         }
+                        
+
+                        // Enfoque 2: Ordenar materiales con cantidad restante de 0 al final
+                     /*   ForEach(
+                            remainingQuantities.keys.sorted { (material1, material2) -> Bool in
+                                let remaining1 = remainingQuantities[material1] ?? 0
+                                let remaining2 = remainingQuantities[material2] ?? 0
+                                
+                                // Materiales con cantidad > 0 van primero
+                                if remaining1 > 0 && remaining2 == 0 {
+                                    return true
+                                }
+                                if remaining1 == 0 && remaining2 > 0 {
+                                    return false
+                                }
+                                
+                                // Si ambos tienen la misma condición, ordenar alfabéticamente
+                                return material1 < material2
+                            },
+                            id: \.self
+                        ) { material in
+                            VStack {
+                                Text(material)
+                                    .font(.subheadline)
+                                    .fontWeight(.bold)
+                                Text("Restante: \(remainingQuantities[material]!)")
+                                    .font(.subheadline)
+                            }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                        }*/
                     }
                     .padding(.horizontal)
                 }
                 .padding(.vertical, 5)
             }
+
 
             Spacer()
 

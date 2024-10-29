@@ -23,8 +23,23 @@ struct TrackingData: Codable {
     }
 }
 
-// Modelo para la respuesta completa
 struct DeliveryResponse: Codable {
     let found: Bool
-    let deliveries: [TrackingData]
+    let deliveries: [TrackingData]?
+
+    // En caso de que la respuesta también incluya un mensaje de error
+    let message: String?
+
+    enum CodingKeys: String, CodingKey {
+        case found = "found"
+        case deliveries = "deliveries"
+        case message = "message"
+    }
+}
+
+
+enum APIError: Error {
+    case notFound
+    case serverError
+    case unknown
 }
