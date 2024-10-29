@@ -10,7 +10,6 @@ struct TrackingData: Codable {
     let supplierName: String
     let container: String?
     let src: String?
-    
     enum CodingKeys: String, CodingKey {
         case externalDeliveryID = "EXTERNAL_DELVRY_ID"
         case material = "MATERIAL"

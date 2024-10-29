@@ -1,5 +1,5 @@
-import SwiftUI
 
+import SwiftUI
 struct ContentView: View {
     @State private var referenceNumber = ""
     @State private var selectedShipmentType = "More Information"
@@ -18,6 +18,8 @@ struct ContentView: View {
     @State private var objectIDsFromPrint: [String] = []
     @State private var shouldNavigateToExportView = false
     @State private var navigateToExportView = false
+    @State private var shouldNavigateToManualInsertion = false
+    @State private var showManualInsertionAlert = false // Añadido para controlar el nuevo alerta
     let shipmentTypes = ["More Information", "Printing", "Verification", "Export"]
     let apiService = APIService()
 
@@ -53,18 +55,15 @@ struct ContentView: View {
                     } else if selectedShipmentType == "Printing" {
                         PrintingView(useCustomLabels: $useCustomLabels, customLabels: $customLabels)
                     } else if selectedShipmentType == "Verification" {
-                        // No mostramos una vista específica aquí; la navegación se maneja mediante NavigationLink
                         EmptyView()
                     } else if selectedShipmentType == "Export" {
-                        // No mostramos una vista específica aquí; la navegación se maneja mediante NavigationLink
                         EmptyView()
                     } else {
-                        // Vista predeterminada para cualquier otra selección no manejada
                         EmptyView()
                     }
 
                     Spacer()
-
+                        
                     if isLoading && selectedShipmentType != "More Information" {
                         ProgressView("Cargando...")
                     }
@@ -83,9 +82,6 @@ struct ContentView: View {
                                 .cornerRadius(10)
                         }
                         .disabled(isLoading || referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || (apiResponse == nil || apiResponse!.isEmpty))
-                        .alert(isPresented: $showAlert) {
-                            Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
-                        }
                     }
 
                     // Texto de redirección para "Export"
@@ -94,6 +90,12 @@ struct ContentView: View {
                             .onAppear {
                                 navigateToExportView = true
                             }
+                    }
+                    NavigationLink(
+                        destination: ManualInsertionView(),
+                        isActive: $shouldNavigateToManualInsertion
+                    ) {
+                        EmptyView()
                     }
 
                     // NavigationLinks ocultos para navegación programática
@@ -128,7 +130,21 @@ struct ContentView: View {
                 }
                 .navigationTitle("Importación de Material")
                 .padding()
-
+                // Mover los modificadores de alerta aquí
+                .alert(isPresented: $showAlert) {
+                    Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+                }
+                .alert(isPresented: $showManualInsertionAlert) {
+                    Alert(
+                        title: Text("No se encontraron datos"),
+                        message: Text("¿Deseas ingresar los datos manualmente?"),
+                        primaryButton: .default(Text("Sí"), action: {
+                            shouldNavigateToManualInsertion = true
+                        }),
+                        secondaryButton: .cancel(Text("Cancelar"))
+                    )
+                }
+                        
                 // Vista de escáner si está activo
                 if isScanning {
                     VStack {
@@ -198,6 +214,7 @@ struct ContentView: View {
         self.objectIDsFromPrint = []
         self.showAlert = false
         self.alertMessage = ""
+        self.showManualInsertionAlert = false // Resetear estado del alerta
 
         // Iniciar nueva búsqueda
         fetchAPIResponse()
@@ -219,48 +236,45 @@ struct ContentView: View {
         }
     }
 
-    // Función para llamar a la API y procesar la respuesta
     func fetchAPIResponse() {
         guard !referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             self.alertMessage = "Por favor, completa el número de referencia antes de continuar."
             self.showAlert = true
+            print("Depuración: El número de referencia está vacío.")
             return
         }
 
         isLoading = true
+        print("Depuración: Iniciando búsqueda para referencia: \(referenceNumber)")
+
         apiService.fetchData(referenceNumber: referenceNumber) { result in
             DispatchQueue.main.async {
                 self.isLoading = false
+
                 switch result {
                 case .success(let trackingData):
+                    print("Depuración: Llamada exitosa. Datos obtenidos: \(trackingData.count)")
+
                     if trackingData.isEmpty {
-                        self.alertMessage = "No se encontraron datos para el número de referencia proporcionado."
-                        self.showAlert = true
+                        // Mostrar alerta para preguntar si desea navegar a ManualInsertionView
+                        self.showManualInsertionAlert = true
+                        print("Depuración: No se encontraron datos. Preguntando al usuario si desea ingresar datos manualmente.")
                     } else {
                         self.apiResponse = trackingData
                         self.storedTrackingData = trackingData // Guarda los datos permanentemente
 
-                        // Extraer IDs únicos usando externalDeliveryID (o algún otro campo disponible en tu JSON)
+                        // Extraer IDs únicos usando externalDeliveryID
                         let uniqueIDsSet = Set(trackingData.map { $0.externalDeliveryID })
                         self.uniqueObjectIDs = Array(uniqueIDsSet)
                         self.uniqueObjectIDCount = uniqueObjectIDs.count
+                        print("Depuración: Se encontraron \(self.uniqueObjectIDCount) IDs únicos.")
                     }
 
                 case .failure(let error):
-                    // Diferenciar entre tipos de errores
-                    if let apiError = error as? APIError {
-                        switch apiError {
-                        case .notFound:
-                            self.alertMessage = "No se encontraron datos para el número de referencia proporcionado."
-                        case .serverError:
-                            self.alertMessage = "Error del servidor. Por favor, intenta nuevamente más tarde."
-                        default:
-                            self.alertMessage = "Ocurrió un error: \(error.localizedDescription)"
-                        }
-                    } else {
-                        self.alertMessage = "Ocurrió un error: \(error.localizedDescription)"
-                    }
+                    // Manejar errores de red o decodificación
+                    self.alertMessage = "Ocurrió un error: \(error.localizedDescription)"
                     self.showAlert = true
+                    print("Depuración: Ocurrió un error: \(error.localizedDescription).")
                 }
             }
         }
@@ -270,4 +284,4 @@ struct ContentView: View {
     func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
-}
+} 
