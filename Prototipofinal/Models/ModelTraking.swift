@@ -42,3 +42,23 @@ enum APIError: Error {
     case serverError
     case unknown
 }
+
+import Foundation
+
+struct DeliveryRequest: Codable {
+    let externalDeliveryID: String
+    let deliveryNo: String
+    let supplierVendor: String
+    let supplierName: String
+    let truckReference: String
+    let providerReference: String
+    let materials: [MaterialRequest]
+    let container: String?
+    let src: String?
+}
+
+struct MaterialRequest: Codable, Identifiable {
+    let id = UUID()
+    let material: String
+    let deliveryQty: String
+}
