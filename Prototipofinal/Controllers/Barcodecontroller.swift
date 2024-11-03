@@ -69,7 +69,7 @@ struct CameraScannerView: UIViewControllerRepresentable {
             captureSession.addOutput(metadataOutput)
 
             metadataOutput.setMetadataObjectsDelegate(context.coordinator, queue: DispatchQueue.main)
-            metadataOutput.metadataObjectTypes = [.qr, .ean13, .code128]
+            metadataOutput.metadataObjectTypes = [.qr, .ean13, .code128,.code39,.codabar,.code39Mod43,.code93,.aztec,.pdf417,.aztec, .interleaved2of5, .ean8,.code39Mod43,.codabar,.code93,.pdf417]
 
             // Definir el área de interés para el escaneo
             let screenSize = UIScreen.main.bounds.size
