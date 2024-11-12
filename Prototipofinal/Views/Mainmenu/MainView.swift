@@ -1,4 +1,3 @@
-
 import SwiftUI
 struct ContentView: View {
     @State private var referenceNumber = ""
@@ -19,7 +18,7 @@ struct ContentView: View {
     @State private var shouldNavigateToExportView = false
     @State private var navigateToExportView = false
     @State private var shouldNavigateToManualInsertion = false
-    @State private var showManualInsertionAlert = false // Añadido para controlar el nuevo alerta
+    @State private var showManualInsertionAlert = false // Added to control the new alert
     let shipmentTypes = ["More Information", "Printing", "Verification", "Export"]
     let apiService = APIService()
 
@@ -34,7 +33,7 @@ struct ContentView: View {
                             initiateNewSearch()
                         }
 
-                    Picker("Tipo de opción", selection: $selectedShipmentType) {
+                    Picker("Option Type", selection: $selectedShipmentType) {
                         ForEach(shipmentTypes, id: \.self) { type in
                             Text(type)
                         }
@@ -42,14 +41,14 @@ struct ContentView: View {
                     .pickerStyle(SegmentedPickerStyle())
                     .padding()
 
-                    // Vista adicional basada en selección
+                    // Additional view based on selection
                     if selectedShipmentType == "More Information" {
                         if isLoading {
-                            ProgressView("Cargando datos...")
+                            ProgressView("Loading data...")
                         } else if let trackingData = apiResponse, !trackingData.isEmpty {
                             MaterialListView(trackingData: trackingData)
                         } else {
-                            Text("No se encontraron datos.")
+                            Text("No data found.")
                                 .foregroundColor(.gray)
                         }
                     } else if selectedShipmentType == "Printing" {
@@ -65,15 +64,15 @@ struct ContentView: View {
                     Spacer()
                         
                     if isLoading && selectedShipmentType != "More Information" {
-                        ProgressView("Cargando...")
+                        ProgressView("Loading...")
                     }
 
-                    // Botón "Imprimir" solo si está seleccionada la opción "Printing"
+                    // "Print" button only if the "Printing" option is selected
                     if selectedShipmentType == "Printing" {
                         Button(action: {
                             handlePrintButton()
                         }) {
-                            Text("Imprimir \(useCustomLabels ? customLabels : uniqueObjectIDCount) etiquetas")
+                            Text("Print \(useCustomLabels ? customLabels : uniqueObjectIDCount) labels")
                                 .font(.headline)
                                 .frame(maxWidth: .infinity)
                                 .padding()
@@ -84,9 +83,9 @@ struct ContentView: View {
                         .disabled(isLoading || referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || (apiResponse == nil || apiResponse!.isEmpty))
                     }
 
-                    // Texto de redirección para "Export"
+                    // Redirect text for "Export"
                     if selectedShipmentType == "Export" {
-                        Text("Redirigiendo a ExportView...")
+                        Text("Redirecting to ExportView...")
                             .onAppear {
                                 navigateToExportView = true
                             }
@@ -98,7 +97,7 @@ struct ContentView: View {
                         EmptyView()
                     }
 
-                    // NavigationLinks ocultos para navegación programática
+                    // Hidden NavigationLinks for programmatic navigation
                     NavigationLink(
                         destination: ExportView(),
                         isActive: $navigateToExportView,
@@ -128,24 +127,24 @@ struct ContentView: View {
                         EmptyView()
                     }
                 }
-                .navigationTitle("Importación de Material")
+                .navigationTitle("Material Import")
                 .padding()
-                // Mover los modificadores de alerta aquí
+                // Move alert modifiers here
                 .alert(isPresented: $showAlert) {
                     Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
                 }
                 .alert(isPresented: $showManualInsertionAlert) {
                     Alert(
-                        title: Text("No se encontraron datos"),
-                        message: Text("¿Deseas ingresar los datos manualmente?"),
-                        primaryButton: .default(Text("Sí"), action: {
+                        title: Text("No data found"),
+                        message: Text("Would you like to enter data manually?"),
+                        primaryButton: .default(Text("Yes"), action: {
                             shouldNavigateToManualInsertion = true
                         }),
-                        secondaryButton: .cancel(Text("Cancelar"))
+                        secondaryButton: .cancel(Text("Cancel"))
                     )
                 }
                         
-                // Vista de escáner si está activo
+                // Scanner view if active
                 if isScanning {
                     VStack {
                         CameraScannerView(scannedCode: .constant(nil), onCodeScanned: { code in
@@ -158,7 +157,7 @@ struct ContentView: View {
                         Button(action: {
                             isScanning = false
                         }) {
-                            Text("Cancelar")
+                            Text("Cancel")
                                 .padding()
                                 .background(Color.red)
                                 .foregroundColor(.white)
@@ -173,29 +172,29 @@ struct ContentView: View {
             }
             .onChange(of: selectedShipmentType) { newValue in
                 if newValue == "Verification" {
-                    // Verificar si el número de referencia está vacío
+                    // Check if the reference number is empty
                     if referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        alertMessage = "Necesitas un número de referencia para continuar."
+                        alertMessage = "You need a reference number to continue."
                         showAlert = true
-                        selectedShipmentType = "More Information" // Revertir la selección
+                        selectedShipmentType = "More Information" // Revert selection
                     } else if apiResponse == nil || apiResponse!.isEmpty {
-                        alertMessage = "No se encontraron datos para el número de referencia proporcionado."
+                        alertMessage = "No data found for the provided reference number."
                         showAlert = true
-                        selectedShipmentType = "More Information" // Revertir la selección
+                        selectedShipmentType = "More Information" // Revert selection
                     } else {
                         storedTrackingData = apiResponse ?? []
                         shouldNavigateToChecklist = true
                     }
                 } else if newValue == "Export" {
-                    // Verificar si el número de referencia está vacío antes de exportar
+                    // Check if the reference number is empty before exporting
                     if referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        alertMessage = "Necesitas un número de referencia para continuar."
+                        alertMessage = "You need a reference number to continue."
                         showAlert = true
-                        selectedShipmentType = "More Information" // Revertir la selección
+                        selectedShipmentType = "More Information" // Revert selection
                     } else if apiResponse == nil || apiResponse!.isEmpty {
-                        alertMessage = "No se encontraron datos para el número de referencia proporcionado."
+                        alertMessage = "No data found for the provided reference number."
                         showAlert = true
-                        selectedShipmentType = "More Information" // Revertir la selección
+                        selectedShipmentType = "More Information" // Revert selection
                     } else {
                         shouldNavigateToExportView = true
                     }
@@ -204,9 +203,9 @@ struct ContentView: View {
         }
     }
 
-    // Función para iniciar una nueva búsqueda, reseteando estados anteriores
+    // Function to initiate a new search, resetting previous states
     func initiateNewSearch() {
-        // Resetear estados anteriores
+        // Reset previous states
         self.apiResponse = nil
         self.storedTrackingData = []
         self.uniqueObjectIDs = []
@@ -214,17 +213,17 @@ struct ContentView: View {
         self.objectIDsFromPrint = []
         self.showAlert = false
         self.alertMessage = ""
-        self.showManualInsertionAlert = false // Resetear estado del alerta
+        self.showManualInsertionAlert = false // Reset alert state
 
-        // Iniciar nueva búsqueda
+        // Start new search
         fetchAPIResponse()
     }
 
-    // Función para manejar la acción del botón "Imprimir"
+    // Function to handle the "Print" button action
     func handlePrintButton() {
-        // Verificar si el número de referencia está vacío
+        // Check if the reference number is empty
         if referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            alertMessage = "Necesitas un número de referencia para continuar."
+            alertMessage = "You need a reference number to continue."
             showAlert = true
             return
         }
@@ -238,14 +237,14 @@ struct ContentView: View {
 
     func fetchAPIResponse() {
         guard !referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            self.alertMessage = "Por favor, completa el número de referencia antes de continuar."
+            self.alertMessage = "Please complete the reference number before proceeding."
             self.showAlert = true
-            print("Depuración: El número de referencia está vacío.")
+            print("Debug: Reference number is empty.")
             return
         }
 
         isLoading = true
-        print("Depuración: Iniciando búsqueda para referencia: \(referenceNumber)")
+        print("Debug: Starting search for reference: \(referenceNumber)")
 
         apiService.fetchData(referenceNumber: referenceNumber) { result in
             DispatchQueue.main.async {
@@ -253,35 +252,35 @@ struct ContentView: View {
 
                 switch result {
                 case .success(let trackingData):
-                    print("Depuración: Llamada exitosa. Datos obtenidos: \(trackingData.count)")
+                    print("Debug: Successful call. Data obtained: \(trackingData.count)")
 
                     if trackingData.isEmpty {
-                        // Mostrar alerta para preguntar si desea navegar a ManualInsertionView
+                        // Show alert to ask if they wish to navigate to ManualInsertionView
                         self.showManualInsertionAlert = true
-                        print("Depuración: No se encontraron datos. Preguntando al usuario si desea ingresar datos manualmente.")
+                        print("Debug: No data found. Asking user if they want to enter data manually.")
                     } else {
                         self.apiResponse = trackingData
-                        self.storedTrackingData = trackingData // Guarda los datos permanentemente
+                        self.storedTrackingData = trackingData // Save data permanently
 
-                        // Extraer IDs únicos usando externalDeliveryID
+                        // Extract unique IDs using externalDeliveryID
                         let uniqueIDsSet = Set(trackingData.map { $0.externalDeliveryID })
                         self.uniqueObjectIDs = Array(uniqueIDsSet)
                         self.uniqueObjectIDCount = uniqueObjectIDs.count
-                        print("Depuración: Se encontraron \(self.uniqueObjectIDCount) IDs únicos.")
+                        print("Debug: Found \(self.uniqueObjectIDCount) unique IDs.")
                     }
 
                 case .failure(let error):
-                    // Manejar errores de red o decodificación
-                    self.alertMessage = "Ocurrió un error: \(error.localizedDescription)"
+                    // Handle network or decoding errors
+                    self.alertMessage = "An error occurred: \(error.localizedDescription)"
                     self.showAlert = true
-                    print("Depuración: Ocurrió un error: \(error.localizedDescription).")
+                    print("Debug: An error occurred: \(error.localizedDescription).")
                 }
             }
         }
     }
 
-    // Ocultar el teclado
+    // Hide the keyboard
     func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
-} 
+}

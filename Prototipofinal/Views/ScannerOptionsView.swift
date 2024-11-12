@@ -1,158 +1,176 @@
 import SwiftUI
 
 struct MaterialChecklistView: View {
-    var trackingData: [TrackingData] // Datos de seguimiento proporcionados
-    var objectIDs: [String] // Lista de objectIDs
+    var trackingData: [TrackingData] // Provided tracking data
+    var objectIDs: [String] // List of object IDs
 
-    // Estados para manejar materiales y ubicaciones
+    // States to manage materials and locations
     @State private var materialsPerObjectID: [String: [MaterialEntry]] = [:]
     @State private var locationsPerObjectID: [String: String] = [:]
 
-    // Estado para manejar las cantidades restantes de cada material
+    // States to manage remaining and total quantities of each material
     @State private var remainingQuantities: [String: Int] = [:]
+    @State private var totalQuantities: [String: Int] = [:] // Added to track total quantities
 
-    // Estados para controlar la presentación de sheets y alerts
+    // States to control the presentation of sheets and alerts
     @State private var showingAddMaterialSheet = false
     @State private var selectedObjectID: String?
     @State private var newMaterial = ""
     @State private var newQuantityText = ""
-    @State private var showingErrorAlert = false
-    @State private var errorMessage = ""
-    @State private var showingSuccessAlert = false
-    @State private var showingMissingQuantitiesAlert = false
+
+    // State variables for alerts
+    enum ActiveAlert: Identifiable {
+        case error
+        case success
+        case missingQuantities
+
+        var id: Int {
+            hashValue
+        }
+    }
+    @State private var activeAlert: ActiveAlert?
+    @State private var errorMessage: String = ""
     @State private var missingMaterials: [(material: String, quantity: Int)] = []
 
-    // Estados para la asignación de ubicación
+    // States for location assignment
     @State private var showingAssignLocationSheet = false
     @State private var newLocation = ""
 
-    // Estados para el escaneo
+    // State for general location assignment
+    @State private var showingAssignGeneralLocationSheet = false
+    @State private var newGeneralLocation = ""
+
+    // States for scanning
     @State private var showingMaterialScanner = false
     @State private var showingQuantityScanner = false
 
+    // State for object ID scanning
+    @State private var scannedObjectIDs: Set<String> = []
+    @State private var showingObjectIDScanner = false
+
+    // State to manage expandable/collapsible object IDs
+    @State private var expandedObjectIDs: [String: Bool] = [:]
+
+    // Environment variable to handle view dismissal
+    @Environment(\.dismiss) var dismiss
+
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-       
 
-            // Mostrar lista de objectIDs
+            // Display list of object IDs
             List {
                 ForEach(objectIDs, id: \.self) { objectID in
-                    Section(header: Text("Object ID: \(objectID)").font(.headline)) {
-
-                        // Mostrar ubicación asignada si existe
-                        if let location = locationsPerObjectID[objectID] {
-                            HStack {
-                                Text("Ubicación Asignada:")
-                                Spacer()
-                                Text(location)
-                                    .fontWeight(.bold)
+                    DisclosureGroup(
+                        isExpanded: Binding<Bool>(
+                            get: { expandedObjectIDs[objectID, default: false] },
+                            set: { expandedObjectIDs[objectID] = $0 }
+                        )
+                    ) {
+                        if !scannedObjectIDs.contains(objectID) {
+                            Button(action: {
+                                selectedObjectID = objectID
+                                showingObjectIDScanner = true
+                            }) {
+                                Text("Scan Object ID")
+                                    .foregroundColor(.orange)
                             }
-                        }
-
-                        // Botón para asignar ubicación
-                        Button(action: {
-                            selectedObjectID = objectID
-                            showingAssignLocationSheet = true
-                        }) {
-                            Text(locationsPerObjectID[objectID] != nil ? "Cambiar Ubicación" : "Asignar Ubicación")
-                                .foregroundColor(.green)
-                        }
-                        .padding(.vertical, 5)
-
-                        // Mostrar materiales agregados a este objectID
-                        if let materials = materialsPerObjectID[objectID] {
-                            ForEach(materials) { entry in
+                        } else {
+                            // Show assigned location if it exists
+                            if let location = locationsPerObjectID[objectID] {
                                 HStack {
-                                    Text("Material: \(entry.material)")
+                                    Text("Assigned Location:")
                                     Spacer()
-                                    Text("Cantidad: \(entry.quantity)")
+                                    Text(location)
+                                        .fontWeight(.bold)
                                 }
                             }
-                        }
 
-                        // Botón para agregar material a este objectID
-                        Button(action: {
-                            selectedObjectID = objectID
-                            showingAddMaterialSheet = true
-                        }) {
-                            Text("Agregar Material")
-                                .foregroundColor(.blue)
+                            // Button to assign location
+                            Button(action: {
+                                selectedObjectID = objectID
+                                showingAssignLocationSheet = true
+                            }) {
+                                Text(locationsPerObjectID[objectID] != nil ? "Change Location" : "Assign Location")
+                                    .foregroundColor(.green)
+                            }
+                            .padding(.vertical, 5)
+
+                            // Show materials added to this object ID with delete functionality
+                            if let materials = materialsPerObjectID[objectID] {
+                                ForEach(materials) { entry in
+                                    HStack {
+                                        Text("Material: \(entry.material)")
+                                        Spacer()
+                                        Text("Quantity: \(entry.quantity)")
+                                    }
+                                }
+                                .onDelete { indices in
+                                    deleteMaterials(at: indices, for: objectID)
+                                }
+                            }
+
+                            // Button to add material to this object ID
+                            Button(action: {
+                                selectedObjectID = objectID
+                                showingAddMaterialSheet = true
+                            }) {
+                                Text("Add Material")
+                                    .foregroundColor(.blue)
+                            }
+                            .padding(.vertical, 5)
+                            .disabled(!scannedObjectIDs.contains(objectID))
                         }
-                        .padding(.vertical, 5)
+                    } label: {
+                        Text("Object ID: \(objectID)")
+                            .font(.headline)
                     }
                 }
             }
             .listStyle(GroupedListStyle())
             .padding(.bottom)
 
-            // Mostrar cantidades restantes de cada material en una lista pequeña
+            // General Assign Location Button
+            Button(action: {
+                showingAssignGeneralLocationSheet = true
+            }) {
+                Text("Assign Location to All")
+                    .foregroundColor(.purple)
+            }
+            .padding()
+
+            // Show remaining quantities of each material in a small list
             VStack(alignment: .leading) {
-                Text("Cantidades Restantes:")
+                Text("Remaining Quantities:")
                     .font(.headline)
                     .padding(.leading)
 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 15) {
-                        // Enfoque 1: Excluir materiales con cantidad restante de 0
-                        
                         ForEach(remainingQuantities.keys.filter { remainingQuantities[$0]! > 0 }.sorted(), id: \.self) { material in
                             VStack {
                                 Text(material)
                                     .font(.subheadline)
                                     .fontWeight(.bold)
-                                Text("Restante: \(remainingQuantities[material]!)")
+                                Text("Remaining: \(remainingQuantities[material]!)")
                                     .font(.subheadline)
                             }
                             .padding()
                             .background(Color(.systemGray6))
                             .cornerRadius(8)
                         }
-                        
-
-                        // Enfoque 2: Ordenar materiales con cantidad restante de 0 al final
-                     /*   ForEach(
-                            remainingQuantities.keys.sorted { (material1, material2) -> Bool in
-                                let remaining1 = remainingQuantities[material1] ?? 0
-                                let remaining2 = remainingQuantities[material2] ?? 0
-                                
-                                // Materiales con cantidad > 0 van primero
-                                if remaining1 > 0 && remaining2 == 0 {
-                                    return true
-                                }
-                                if remaining1 == 0 && remaining2 > 0 {
-                                    return false
-                                }
-                                
-                                // Si ambos tienen la misma condición, ordenar alfabéticamente
-                                return material1 < material2
-                            },
-                            id: \.self
-                        ) { material in
-                            VStack {
-                                Text(material)
-                                    .font(.subheadline)
-                                    .fontWeight(.bold)
-                                Text("Restante: \(remainingQuantities[material]!)")
-                                    .font(.subheadline)
-                            }
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .cornerRadius(8)
-                        }*/
                     }
                     .padding(.horizontal)
                 }
                 .padding(.vertical, 5)
             }
 
-
             Spacer()
 
-            // Botón de Enviar
+            // Send Button
             Button(action: {
                 checkForMissingQuantitiesAndSendData()
             }) {
-                Text("Enviar")
+                Text("Send")
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color.blue)
@@ -161,9 +179,12 @@ struct MaterialChecklistView: View {
             }
             .padding(.horizontal)
         }
-        .navigationTitle("Cheklist PakingList")
+        .navigationTitle("Packing List Checklist")
         .onAppear {
             initializeRemainingQuantities()
+            for objectID in objectIDs {
+                expandedObjectIDs[objectID] = true
+            }
         }
         // Assign Location Sheet
         .sheet(isPresented: $showingAssignLocationSheet) {
@@ -180,7 +201,7 @@ struct MaterialChecklistView: View {
         // Add Material Sheet
         .sheet(isPresented: $showingAddMaterialSheet) {
             VStack {
-                Text("Agregar Material")
+                Text("Add Material")
                     .font(.headline)
                     .padding()
 
@@ -198,9 +219,21 @@ struct MaterialChecklistView: View {
                 }
                 .padding()
 
+                // List of materials from trackingData
+                List {
+                    ForEach(trackingDataMaterials(), id: \.self) { material in
+                        Button(action: {
+                            newMaterial = material
+                        }) {
+                            Text(material)
+                        }
+                    }
+                }
+                .frame(maxHeight: 150) // Limit the height of the list
+
                 // Quantity Input with Camera Icon
                 HStack {
-                    TextField("Cantidad", text: $newQuantityText)
+                    TextField("Quantity", text: $newQuantityText)
                         .keyboardType(.numberPad)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                     Button(action: {
@@ -214,14 +247,14 @@ struct MaterialChecklistView: View {
                 .padding()
 
                 HStack {
-                    Button("Cancelar") {
+                    Button("Cancel") {
                         showingAddMaterialSheet = false
                         newMaterial = ""
                         newQuantityText = ""
                     }
                     .padding()
                     Spacer()
-                    Button("Agregar") {
+                    Button("Add") {
                         addMaterial()
                         showingAddMaterialSheet = false
                     }
@@ -251,85 +284,151 @@ struct MaterialChecklistView: View {
                 }
             }
         }
-        // Error Alert
-        .alert(isPresented: $showingErrorAlert) {
-            Alert(title: Text("Error"), message: Text(errorMessage), dismissButton: .default(Text("Aceptar")))
+        // Combined alerts in a single modifier
+        .alert(item: $activeAlert) { alert in
+            switch alert {
+            case .error:
+                return Alert(
+                    title: Text("Error"),
+                    message: Text(errorMessage),
+                    dismissButton: .default(Text("OK"))
+                )
+            case .success:
+                return Alert(
+                    title: Text("Success"),
+                    message: Text("Data sent successfully."),
+                    dismissButton: .default(Text("OK"), action: {
+                        resetData()
+                        dismiss()
+                    })
+                )
+            case .missingQuantities:
+                return Alert(
+                    title: Text("Missing Quantities"),
+                    message: Text(missingMaterialsMessage()),
+                    primaryButton: .destructive(Text("Continue")) {
+                        sendData()
+                    },
+                    secondaryButton: .cancel(Text("Cancel"))
+                )
+            }
         }
-        // Success Alert
-        .alert(isPresented: $showingSuccessAlert) {
-            Alert(title: Text("Éxito"), message: Text("Datos enviados correctamente."), dismissButton: .default(Text("Aceptar")))
-        }
-        // Missing Quantities Alert
-        .alert(isPresented: $showingMissingQuantitiesAlert) {
-            Alert(
-                title: Text("Cantidades Faltantes"),
-                message: Text(missingMaterialsMessage()),
-                primaryButton: .destructive(Text("Continuar")) {
-                    sendData()
-                },
-                secondaryButton: .cancel(Text("Cancelar"))
+        // General Assign Location Sheet
+        .sheet(isPresented: $showingAssignGeneralLocationSheet) {
+            let optionalNewGeneralLocation = Binding<String?>(
+                get: { self.newGeneralLocation },
+                set: { self.newGeneralLocation = $0 ?? "" }
             )
+            CameraScannerWrapperView(scannedCode: optionalNewGeneralLocation) { code in
+                newGeneralLocation = code
+                assignGeneralLocation()
+                showingAssignGeneralLocationSheet = false
+            }
+        }
+        // Object ID Scanner Sheet
+        .sheet(isPresented: $showingObjectIDScanner) {
+            let scannedCodeBinding = Binding<String?>(
+                get: { "" },
+                set: { _ in }
+            )
+            CameraScannerWrapperView(scannedCode: scannedCodeBinding) { code in
+                if code == selectedObjectID {
+                    if let validCode = selectedObjectID {
+                        scannedObjectIDs.insert(validCode)
+                    } else {
+                        showError(message: "Selected Object ID is nil.")
+                    }
+                } else {
+                    showError(message: "Scanned code does not match Object ID.")
+                }
+                showingObjectIDScanner = false
+            }
         }
     }
-    // Función para inicializar las cantidades restantes
+
+    // Function to initialize remaining and total quantities
     func initializeRemainingQuantities() {
         let grouped = Dictionary(grouping: trackingData, by: { $0.material })
         for (material, entries) in grouped {
-            // Convertir deliveryQty de String a Int de forma segura
+            // Safely convert deliveryQty from String to Int
             let totalQuantity = entries.reduce(0) { (result, data) -> Int in
                 let qty = Int(data.deliveryQty) ?? 0
                 return result + qty
             }
             remainingQuantities[material] = totalQuantity
+            totalQuantities[material] = totalQuantity // Store total quantities
         }
     }
 
-    // Función para agregar material
+    // Function to get list of materials from trackingData
+    func trackingDataMaterials() -> [String] {
+        let materials = trackingData.map { $0.material }
+        return Array(Set(materials)).sorted()
+    }
+
+    // Function to add material
     func addMaterial() {
         guard let objectID = selectedObjectID else { return }
         let material = newMaterial.trimmingCharacters(in: .whitespacesAndNewlines)
         let quantityStr = newQuantityText.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if material.isEmpty || quantityStr.isEmpty {
-            showError(message: "Por favor, completa todos los campos.")
+            showError(message: "Please fill in all fields.")
             return
         }
 
         if let quantity = Int(quantityStr), quantity > 0 {
             if let remaining = remainingQuantities[material], remaining >= quantity {
-                // Restar la cantidad del material
+                // Subtract the quantity from the material
                 remainingQuantities[material] = remaining - quantity
 
-                // Agregar el material al objectID
+                // Add the material to the object ID
                 let location = locationsPerObjectID[objectID] ?? ""
                 let entry = MaterialEntry(id: UUID(), material: material, quantity: quantity, location: location)
                 materialsPerObjectID[objectID, default: []].append(entry)
             } else {
-                showError(message: "Cantidad insuficiente para el material \(material).")
+                showError(message: "Insufficient quantity for material \(material).")
             }
         } else {
-            showError(message: "Cantidad inválida. Por favor, ingresa un número válido.")
+            showError(message: "Invalid quantity. Please enter a valid number.")
         }
 
-        // Resetear los campos
+        // Reset fields
         newMaterial = ""
         newQuantityText = ""
     }
 
-    // Función para asignar ubicación
+    // Function to delete materials
+    func deleteMaterials(at offsets: IndexSet, for objectID: String) {
+        if var materials = materialsPerObjectID[objectID] {
+            for index in offsets {
+                let entry = materials[index]
+                // Update the remaining quantities
+                if let remaining = remainingQuantities[entry.material] {
+                    remainingQuantities[entry.material] = remaining + entry.quantity
+                } else {
+                    remainingQuantities[entry.material] = entry.quantity
+                }
+            }
+            materials.remove(atOffsets: offsets)
+            materialsPerObjectID[objectID] = materials
+        }
+    }
+
+    // Function to assign location
     func assignLocation() {
         guard let objectID = selectedObjectID else { return }
         let location = newLocation.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if location.isEmpty {
-            showError(message: "Por favor, ingresa una ubicación.")
+            showError(message: "Please enter a location.")
             return
         }
 
-        // Asignar la ubicación al objectID
+        // Assign the location to the object ID
         locationsPerObjectID[objectID] = location
 
-        // Actualizar las ubicaciones en los materiales asignados a este objectID
+        // Update the locations in the materials assigned to this object ID
         if var materials = materialsPerObjectID[objectID] {
             for index in materials.indices {
                 materials[index].location = location
@@ -337,19 +436,45 @@ struct MaterialChecklistView: View {
             materialsPerObjectID[objectID] = materials
         }
 
-        // Resetear el campo
+        // Reset the field
         newLocation = ""
     }
 
-    // Función para mostrar un error
-    func showError(message: String) {
-        errorMessage = message
-        showingErrorAlert = true
+    // Function to assign general location to all object IDs
+    func assignGeneralLocation() {
+        let location = newGeneralLocation.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if location.isEmpty {
+            showError(message: "Please enter a location.")
+            return
+        }
+
+        // Assign the location to all object IDs
+        for objectID in objectIDs {
+            locationsPerObjectID[objectID] = location
+
+            // Update the locations in the materials assigned to this object ID
+            if var materials = materialsPerObjectID[objectID] {
+                for index in materials.indices {
+                    materials[index].location = location
+                }
+                materialsPerObjectID[objectID] = materials
+            }
+        }
+
+        // Reset the field
+        newGeneralLocation = ""
     }
 
-    // Función para verificar cantidades faltantes y enviar datos
+    // Function to show an error
+    func showError(message: String) {
+        errorMessage = message
+        activeAlert = .error
+    }
+
+    // Function to check for missing quantities and send data
     func checkForMissingQuantitiesAndSendData() {
-        // Verificar si hay cantidades faltantes
+        // Check if there are missing quantities
         var missingMaterialsDict: [String: Int] = [:]
         for (material, remaining) in remainingQuantities {
             if remaining > 0 {
@@ -358,55 +483,56 @@ struct MaterialChecklistView: View {
         }
 
         if !missingMaterialsDict.isEmpty {
-            // Hay materiales con cantidades faltantes
+            // There are materials with missing quantities
             missingMaterials = missingMaterialsDict.map { ($0.key, $0.value) }
-            showingMissingQuantitiesAlert = true
+            activeAlert = .missingQuantities
         } else {
-            // No hay cantidades faltantes, enviar datos
+            // No missing quantities, send data
             sendData()
         }
     }
 
-    // Función para generar el mensaje de materiales faltantes
+    // Function to generate the message of missing materials
     func missingMaterialsMessage() -> String {
-        var message = "Faltan las siguientes cantidades:\n"
+        var message = "The following quantities are missing:\n"
         for (material, quantity) in missingMaterials {
             message += "- \(material): \(quantity)\n"
         }
-        message += "\n¿Deseas continuar?"
+        message += "\nDo you want to continue?"
         return message
     }
 
-    // Función para enviar los datos
+    // Function to send the data
     func sendData() {
-        // Crear un diccionario para agrupar los materiales
+        // Create a dictionary to group materials
         var groupedMaterials: [MaterialKey: MaterialData] = [:]
+        var addedQuantities: [String: Int] = [:] // To track quantities added per material
 
-        // Recorrer cada objectID
+        // Iterate over each object ID
         for objectID in objectIDs {
             guard let location = locationsPerObjectID[objectID] else {
-                showError(message: "Falta la ubicación para el Object ID \(objectID).")
+                showError(message: "Missing location for Object ID \(objectID).")
                 return
             }
 
             guard let materials = materialsPerObjectID[objectID], !materials.isEmpty else {
-                showError(message: "No se han agregado materiales para el Object ID \(objectID).")
+                showError(message: "No materials have been added for Object ID \(objectID).")
                 return
             }
 
-            // Recorrer cada material asignado a este objectID
+            // Iterate over each material assigned to this object ID
             for entry in materials {
                 let key = MaterialKey(objectID: objectID, material: entry.material, location: location)
 
-                // Sumar las cantidades de materiales duplicados
+                // Sum quantities of duplicate materials
                 if let existingData = groupedMaterials[key] {
                     var updatedData = existingData
                     updatedData.QUANTITY += entry.quantity
                     groupedMaterials[key] = updatedData
                 } else {
-                    // Buscar en trackingData la entrada correspondiente al material
+                    // Find the corresponding tracking entry for the material
                     if let trackingEntry = trackingData.first(where: { $0.material == entry.material }) {
-                        // Crear el objeto MaterialData
+                        // Create the MaterialData object
                         let materialData = MaterialData(
                             OBJECT_ID: objectID,
                             TRACKING_NUMBER: trackingEntry.externalDeliveryID,
@@ -414,37 +540,86 @@ struct MaterialChecklistView: View {
                             MATERIAL: trackingEntry.material,
                             QUANTITY: entry.quantity,
                             LOCATION: location,
-                            DELIVERY_TYPE:nil,
-                            BILL: "Y"
+                            DELIVERY_TYPE: nil,
+                            BILL: "Y" // Will adjust later
                         )
                         groupedMaterials[key] = materialData
                     } else {
-                        showError(message: "No se encontró información de tracking para el material \(entry.material).")
+                        showError(message: "No tracking information found for material \(entry.material).")
                         return
+                    }
+                }
+
+                // Update addedQuantities
+                addedQuantities[entry.material, default: 0] += entry.quantity
+            }
+        }
+
+        // Adjust BILL status per material
+        for (material, totalQty) in totalQuantities {
+            let addedQty = addedQuantities[material] ?? 0
+            let isMissingQuantity = addedQty < totalQty
+
+            // Update BILL status for all entries of this material
+            for (key, var materialData) in groupedMaterials where key.material == material {
+                materialData.BILL = isMissingQuantity ? "D" : "Y"
+                groupedMaterials[key] = materialData
+            }
+
+            // If material is missing completely, create an entry with QUANTITY 0 and BILL "D"
+            if isMissingQuantity && addedQty == 0 {
+                for objectID in objectIDs {
+                    guard let location = locationsPerObjectID[objectID] else {
+                        showError(message: "Missing location for Object ID \(objectID).")
+                        return
+                    }
+
+                    let key = MaterialKey(objectID: objectID, material: material, location: location)
+
+                    // Avoid duplicates
+                    if groupedMaterials[key] == nil {
+                        if let trackingEntry = trackingData.first(where: { $0.material == material }) {
+                            let materialData = MaterialData(
+                                OBJECT_ID: objectID,
+                                TRACKING_NUMBER: trackingEntry.externalDeliveryID,
+                                INVOICE_NUMBER: trackingEntry.externalDeliveryID,
+                                MATERIAL: trackingEntry.material,
+                                QUANTITY: 0, // No quantity added
+                                LOCATION: location,
+                                DELIVERY_TYPE: nil,
+                                BILL: "D"
+                            )
+                            groupedMaterials[key] = materialData
+                        }
                     }
                 }
             }
         }
 
-        // Convertir el diccionario a un arreglo
+        // Convert the dictionary to an array
         let jsonDataArray = Array(groupedMaterials.values)
 
-        // Enviar los JSONs a la API
+        // Send the JSONs to the API
         sendJSONData(jsonDataArray)
     }
 
-    // Función para enviar los JSONs a la API
+    // Function to send the JSONs to the API
     func sendJSONData(_ data: [MaterialData]) {
-        // Convertir el arreglo de MaterialData a JSON
+        // Convert the array of MaterialData to JSON
         guard let jsonData = try? JSONEncoder().encode(data) else {
-            showError(message: "Error al codificar los datos a JSON.")
+            showError(message: "Error encoding data to JSON.")
             return
         }
 
-        // Crear la solicitud a la API
+        // Print the JSON data being sent
+        if let jsonString = String(data: jsonData, encoding: .utf8) {
+            print("JSON Data being sent:\n\(jsonString)")
+        }
+
+        // Create the request to the API
         let urlString = "https://ews-emea.api.bosch.com/Api_XDock/api/update"
         guard let url = URL(string: urlString) else {
-            showError(message: "URL inválida.")
+            showError(message: "Invalid URL.")
             return
         }
 
@@ -453,40 +628,59 @@ struct MaterialChecklistView: View {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = jsonData
 
-        // Realizar la solicitud
+        // Perform the request
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            // Print the API response
+            if let httpResponse = response as? HTTPURLResponse {
+                print("API Response Status Code: \(httpResponse.statusCode)")
+            }
+            if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                print("API Response Body:\n\(responseString)")
+            }
+
             if let error = error {
                 DispatchQueue.main.async {
-                    self.showError(message: "Error al enviar los datos: \(error.localizedDescription)")
+                    self.showError(message: "Error sending data: \(error.localizedDescription)")
                 }
                 return
             }
 
-            // Verificar la respuesta
+            // Check the response
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
                 DispatchQueue.main.async {
                     self.showSuccess()
                 }
             } else {
                 DispatchQueue.main.async {
-                    self.showError(message: "Error en la respuesta del servidor.")
+                    self.showError(message: "Error in server response.")
                 }
             }
         }
         task.resume()
     }
 
-    // Función para mostrar éxito
+    // Function to show success and reset data
     func showSuccess() {
-        showingSuccessAlert = true
-        // Aquí puedes resetear los datos si lo deseas
+        activeAlert = .success
+    }
+
+    // Function to reset all data
+    func resetData() {
         materialsPerObjectID.removeAll()
         locationsPerObjectID.removeAll()
         remainingQuantities.removeAll()
+        totalQuantities.removeAll()
+        scannedObjectIDs.removeAll()
+        expandedObjectIDs.removeAll()
+        newMaterial = ""
+        newQuantityText = ""
+        newLocation = ""
+        newGeneralLocation = ""
+        missingMaterials.removeAll()
     }
 }
 
-// Estructura para representar una entrada de material
+// Structure to represent a material entry
 struct MaterialEntry: Identifiable {
     let id: UUID
     let material: String
@@ -494,14 +688,14 @@ struct MaterialEntry: Identifiable {
     var location: String
 }
 
-// Estructura para la clave de agrupación de materiales
+// Structure for the key to group materials
 struct MaterialKey: Hashable {
     let objectID: String
     let material: String
     let location: String
 }
 
-// Estructura para representar los datos a enviar
+// Structure to represent the data to send
 struct MaterialData: Codable {
     let OBJECT_ID: String
     let TRACKING_NUMBER: String?
@@ -510,7 +704,76 @@ struct MaterialData: Codable {
     var QUANTITY: Int
     let LOCATION: String
     let DELIVERY_TYPE: String?
-    let BILL: String
+    var BILL: String
 }
 
-// Estructura para representar los datos de seguimiento
+
+
+import SwiftUI
+
+struct MaterialChecklistView_Previews: PreviewProvider {
+    static var previews: some View {
+        NavigationView {
+            MaterialChecklistView(
+                trackingData: sampleTrackingData,
+                objectIDs: sampleObjectIDs
+            )
+        }
+    }
+    
+    // Datos de muestra para TrackingData
+    static var sampleTrackingData: [TrackingData] = [
+        TrackingData(
+            externalDeliveryID: "OBJ123",
+            material: "Material A",
+            deliveryQty: "10",
+            deliveryNo: "DELIV001",
+            supplierVendor: "Vendor X",
+            supplierName: "Supplier Alpha",
+            container: "Container 1",
+            src: "Source A"
+        ),
+        TrackingData(
+            externalDeliveryID: "OBJ123",
+            material: "Material B",
+            deliveryQty: "5",
+            deliveryNo: "DELIV002",
+            supplierVendor: "Vendor Y",
+            supplierName: "Supplier Beta",
+            container: "Container 2",
+            src: "Source B"
+        ),
+        TrackingData(
+            externalDeliveryID: "OBJ456",
+            material: "Material C",
+            deliveryQty: "8",
+            deliveryNo: "DELIV003",
+            supplierVendor: "Vendor Z",
+            supplierName: "Supplier Gamma",
+            container: nil,
+            src: "Source C"
+        ),
+        TrackingData(
+            externalDeliveryID: "OBJ789",
+            material: "Material D",
+            deliveryQty: "15",
+            deliveryNo: "DELIV004",
+            supplierVendor: "Vendor W",
+            supplierName: "Supplier Delta",
+            container: "Container 3",
+            src: nil
+        )
+    ]
+    
+    // Lista de objectIDs de muestra
+    static var sampleObjectIDs: [String] = [
+        "OBJ123",
+        "OBJ456",
+        "OBJ789"
+    ]
+    
+    // Mock de CameraScannerWrapperView para el Preview
+    
+    
+   
+}

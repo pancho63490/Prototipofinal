@@ -1,34 +1,51 @@
 import SwiftUI
 
 struct ExportView: View {
-    @State private var truckData: [Truck] = [] // Datos de camiones
-    @State private var scannedObjectIDs: Set<String> = [] // Registro de objectIDs escaneados
-    @State private var isLoading = false // Indicador de carga
+    @State private var truckData: [Truck] = [] // Truck data
+    @State private var scannedObjectIDs: Set<String> = [] // Record of scanned ObjectIDs
+    @State private var isLoading = false // Loading indicator
     @State private var showErrorAlert = false
     @State private var errorMessage = ""
-    @State private var showScannerView = false // Control del escáner
-    @State private var currentObjectID: String? // ObjectID en proceso de escaneo
-    @State private var isScanning = false // Control del escaneo activo
+    @State private var currentObjectID: String? // ObjectID being scanned
+    @State private var isScanning = false // Active scanning control
+    @State private var expandedTrucks: Set<UUID> = [] // Tracks expanded trucks
 
     var body: some View {
         NavigationView {
             ZStack {
                 VStack {
                     if isLoading {
-                        ProgressView("Cargando datos...")
+                        ProgressView("Loading data...")
                     } else {
                         List(truckData, id: \.id) { truck in
-                            Section(header: Text("Camión: \(truck.deliveryType)").font(.headline)) {
-                                ForEach(truck.uniqueObjectIDs, id: \.self) { objectID in
+                            DisclosureGroup(
+                                isExpanded: Binding(
+                                    get: { expandedTrucks.contains(truck.id) },
+                                    set: { isExpanded in
+                                        if isExpanded {
+                                            expandedTrucks.insert(truck.id)
+                                        } else {
+                                            expandedTrucks.remove(truck.id)
+                                        }
+                                    }
+                                )
+                            ) {
+                                ForEach(truck.items) { item in
                                     HStack {
-                                        Text("Object ID: \(objectID)")
+                                        VStack(alignment: .leading) {
+                                            Text("Object ID: \(item.objectID)")
+                                                .font(.subheadline)
+                                            Text("Location: \(item.location)")
+                                                .font(.caption)
+                                                .foregroundColor(.gray)
+                                        }
                                         Spacer()
-                                        if scannedObjectIDs.contains(objectID) {
+                                        if scannedObjectIDs.contains(item.objectID) {
                                             Image(systemName: "checkmark.circle.fill")
                                                 .foregroundColor(.green)
                                         } else {
                                             Button(action: {
-                                                currentObjectID = objectID
+                                                currentObjectID = item.objectID
                                                 isScanning = true
                                             }) {
                                                 Image(systemName: "barcode.viewfinder")
@@ -42,7 +59,7 @@ struct ExportView: View {
                                     Button(action: {
                                         markTruckAsCompleted(truck)
                                     }) {
-                                        Text("Enviar y Recargar")
+                                        Text("Send and Reload")
                                             .frame(maxWidth: .infinity)
                                             .padding()
                                             .background(Color.green)
@@ -51,16 +68,26 @@ struct ExportView: View {
                                     }
                                     .padding(.top, 10)
                                 }
+                            } label: {
+                                HStack {
+                                    Text("Truck: \(truck.deliveryType)")
+                                        .font(.headline)
+                                    Spacer()
+                                    Image(systemName: expandedTrucks.contains(truck.id) ? "chevron.up" : "chevron.down")
+                                        .foregroundColor(.gray)
+                                }
                             }
                         }
+                        .listStyle(InsetGroupedListStyle()) // Improved list style for better appearance
                     }
                     Spacer()
                 }
                 .onAppear(perform: fetchTruckData)
-                .navigationTitle("Exportación")
+                .navigationTitle("Export")
                 .alert(isPresented: $showErrorAlert) {
-                    Alert(title: Text("Error"), message: Text(errorMessage), dismissButton: .default(Text("Aceptar")))
+                    Alert(title: Text("Error"), message: Text(errorMessage), dismissButton: .default(Text("OK")))
                 }
+                
                 if isScanning {
                     ZStack {
                         Color.black.opacity(0.8)
@@ -79,7 +106,7 @@ struct ExportView: View {
                             Button(action: {
                                 isScanning = false
                             }) {
-                                Text("Cancelar")
+                                Text("Cancel")
                                     .padding()
                                     .background(Color.red)
                                     .foregroundColor(.white)
@@ -93,13 +120,13 @@ struct ExportView: View {
         }
     }
 
-    // Lógica para cargar datos desde la API
+    // Function to fetch truck data from the API
     func fetchTruckData() {
         isLoading = true
         let urlString = "https://ews-emea.api.bosch.com/Api_XDock/api/TrukData"
-
+        //let urlString = "https://run.mocky.io/v3/6b690ebe-892d-4b10-a70e-841c595b8d64"
         guard let url = URL(string: urlString) else {
-            showError(message: "URL inválida.")
+            showError(message: "Invalid URL.")
             return
         }
 
@@ -108,59 +135,60 @@ struct ExportView: View {
                 isLoading = false
 
                 if let error = error {
-                    showError(message: "Error al obtener datos: \(error.localizedDescription)")
+                    showError(message: "Error fetching data: \(error.localizedDescription)")
                     return
                 }
 
                 guard let data = data else {
-                    showError(message: "Datos no válidos.")
+                    showError(message: "Invalid data.")
                     return
                 }
 
                 do {
                     let decodedData = try JSONDecoder().decode([Truck].self, from: data)
                     truckData = decodedData
-                    print("Datos decodificados correctamente: \(truckData)")
+                    print("Data decoded successfully: \(truckData)")
                 } catch let decodingError {
-                    showError(message: "Error al decodificar los datos: \(decodingError.localizedDescription)")
-                    print("Detalles del error: \(decodingError)")
+                    showError(message: "Error decoding data: \(decodingError.localizedDescription)")
+                    print("Decoding error details: \(decodingError)")
                 }
             }
         }
         task.resume()
     }
 
-    // Validar si el código escaneado coincide con el Object ID
+    // Validate if the scanned code matches the Object ID
     func validateScannedObjectID(_ scannedCode: String?) {
         guard let code = scannedCode?.trimmingCharacters(in: .whitespacesAndNewlines),
               let objectID = currentObjectID?.trimmingCharacters(in: .whitespacesAndNewlines) else {
-            print("Código o ObjectID no válido.")
+            print("Invalid code or ObjectID.")
             return
         }
 
-        // Mostrar en la consola ambos valores para comparar
-        print("Código escaneado: '\(code)'")
-        print("ObjectID esperado: '\(objectID)'")
+        // Print both values to the console for comparison
+        print("Scanned code: '\(code)'")
+        print("Expected ObjectID: '\(objectID)'")
 
         if code == objectID {
             scannedObjectIDs.insert(objectID)
-            print("Escaneado correctamente: \(objectID)")
+            print("Successfully scanned: \(objectID)")
         } else {
-            showError(message: "El código escaneado no coincide con el Object ID.")
-            print("Error: Los códigos no coinciden.")
+            showError(message: "The scanned code does not match the Object ID.")
+            print("Error: Codes do not match.")
         }
     }
 
-    // Verificar si todos los objetos del camión han sido escaneados
+    // Check if all objects for the truck have been scanned
     func allObjectsScanned(for truck: Truck) -> Bool {
-        truck.uniqueObjectIDs.allSatisfy { scannedObjectIDs.contains($0) }
+        truck.items.allSatisfy { scannedObjectIDs.contains($0.objectID) }
     }
 
+    // Mark the truck as completed by sending a PUT request
     func markTruckAsCompleted(_ truck: Truck) {
         let urlString = "https://ews-emea.api.bosch.com/Api_XDock/api/TrukData/UpdateBill"
 
         guard let url = URL(string: urlString) else {
-            showError(message: "URL inválida.")
+            showError(message: "Invalid URL.")
             return
         }
 
@@ -169,7 +197,7 @@ struct ExportView: View {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        // Cuerpo de la solicitud con el formato correcto
+        // Request body with the correct format
         let body: [String: Any] = [
             "DeliveryType": truck.deliveryType
         ]
@@ -178,31 +206,31 @@ struct ExportView: View {
             let jsonData = try JSONSerialization.data(withJSONObject: body, options: [])
             request.httpBody = jsonData
         } catch {
-            showError(message: "Error al codificar los datos: \(error.localizedDescription)")
+            showError(message: "Error encoding data: \(error.localizedDescription)")
             return
         }
 
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    showError(message: "Error al enviar datos: \(error.localizedDescription)")
+                    showError(message: "Error sending data: \(error.localizedDescription)")
                     return
                 }
 
                 guard let httpResponse = response as? HTTPURLResponse else {
-                    showError(message: "Respuesta no válida del servidor.")
+                    showError(message: "Invalid server response.")
                     return
                 }
 
                 if httpResponse.statusCode == 200 {
-                    print("Datos enviados correctamente. Camión: \(truck.deliveryType)")
-                    fetchTruckData() // Recargar los datos después del éxito
+                    print("Data sent successfully. Truck: \(truck.deliveryType)")
+                    fetchTruckData() // Reload data after success
                 } else {
                     if let data = data, let responseBody = String(data: data, encoding: .utf8) {
-                        print("Error en la respuesta del servidor: \(responseBody)")
-                        showError(message: "Error en el servidor: \(responseBody)")
+                        print("Server response error: \(responseBody)")
+                        showError(message: "Server error: \(responseBody)")
                     } else {
-                        showError(message: "Error desconocido en el servidor.")
+                        showError(message: "Unknown server error.")
                     }
                 }
             }
@@ -210,35 +238,34 @@ struct ExportView: View {
         task.resume()
     }
 
-
-
-    // Mostrar error en alerta
+    // Show error in alert
     func showError(message: String) {
         errorMessage = message
         showErrorAlert = true
     }
 }
 
-// Modelo de datos para camiones
+// Data model for trucks
 struct Truck: Codable, Identifiable {
     let id = UUID()
     let deliveryType: String
-    let objectIDs: [String]
-
-    // Computed property para eliminar duplicados
-    var uniqueObjectIDs: [String] {
-        Array(Set(objectIDs))
-    }
+    let items: [Item]
 
     enum CodingKeys: String, CodingKey {
         case deliveryType = "DeliveryType"
-        case objectIDs = "ObjectIDs"
+        case items = "Items"
     }
 }
 
-// Vista previa para Xcode
-struct ExportView_Previews: PreviewProvider {
-    static var previews: some View {
-        ExportView()
+// Data model for items within a truck
+struct Item: Codable, Identifiable {
+    let id = UUID()
+    let objectID: String
+    let location: String
+
+    enum CodingKeys: String, CodingKey {
+        case objectID = "ObjectID"
+        case location = "Location"
     }
 }
+

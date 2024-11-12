@@ -6,17 +6,17 @@ struct PrintingView: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text("Imprimir etiquetas")
+            Text("Print Labels")
                 .font(.headline)
 
-            Toggle("Usar etiquetas personalizadas", isOn: $useCustomLabels)
+            Toggle("Use Custom Labels", isOn: $useCustomLabels)
                 .padding()
 
             if useCustomLabels {
-                Stepper("Cantidad personalizada: \(customLabels)", value: $customLabels, in: 1...100)
+                Stepper("Custom Quantity: \(customLabels)", value: $customLabels, in: 1...100)
                     .padding()
             } else {
-                Stepper("Cantidad predeterminada: \(customLabels)", value: $customLabels, in: 1...100)
+                Stepper("Default Quantity: \(customLabels)", value: $customLabels, in: 1...100)
                     .padding()
             }
         }
