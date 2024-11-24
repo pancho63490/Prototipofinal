@@ -59,7 +59,7 @@ struct ExportView: View {
                                     Button(action: {
                                         markTruckAsCompleted(truck)
                                     }) {
-                                        Text("Send and Reload")
+                                        Text("Export")
                                             .frame(maxWidth: .infinity)
                                             .padding()
                                             .background(Color.green)

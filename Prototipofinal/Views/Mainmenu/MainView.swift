@@ -32,6 +32,9 @@ struct ContentView: View {
                         .onSubmit {
                             initiateNewSearch()
                         }
+                        .onChange(of: referenceNumber) { newValue in
+                            referenceNumber = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                        }
 
                     Picker("Option Type", selection: $selectedShipmentType) {
                         ForEach(shipmentTypes, id: \.self) { type in
@@ -148,7 +151,7 @@ struct ContentView: View {
                 if isScanning {
                     VStack {
                         CameraScannerView(scannedCode: .constant(nil), onCodeScanned: { code in
-                            referenceNumber = code
+                            referenceNumber = code.trimmingCharacters(in: .whitespacesAndNewlines) // Trim el código escaneado
                             isScanning = false
                             initiateNewSearch()
                         })
@@ -205,7 +208,8 @@ struct ContentView: View {
 
     // Function to initiate a new search, resetting previous states
     func initiateNewSearch() {
-        // Reset previous states
+        referenceNumber = referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines)
+          
         self.apiResponse = nil
         self.storedTrackingData = []
         self.uniqueObjectIDs = []
@@ -221,8 +225,11 @@ struct ContentView: View {
 
     // Function to handle the "Print" button action
     func handlePrintButton() {
+        // Trim the reference number
+        let trimmedReference = referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines)
+        
         // Check if the reference number is empty
-        if referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        if trimmedReference.isEmpty {
             alertMessage = "You need a reference number to continue."
             showAlert = true
             return
@@ -236,49 +243,52 @@ struct ContentView: View {
     }
 
     func fetchAPIResponse() {
-        guard !referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            self.alertMessage = "Please complete the reference number before proceeding."
-            self.showAlert = true
-            print("Debug: Reference number is empty.")
-            return
-        }
+            // Trim el referenceNumber y asignarlo de nuevo
+            let trimmedReference = referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines)
+            referenceNumber = trimmedReference
 
-        isLoading = true
-        print("Debug: Starting search for reference: \(referenceNumber)")
+            guard !trimmedReference.isEmpty else {
+                self.alertMessage = "Please complete the reference number before proceeding."
+                self.showAlert = true
+                print("Debug: Reference number is empty.")
+                return
+            }
 
-        apiService.fetchData(referenceNumber: referenceNumber) { result in
-            DispatchQueue.main.async {
-                self.isLoading = false
+            isLoading = true
+            print("Debug: Starting search for reference: \(trimmedReference)")
 
-                switch result {
-                case .success(let trackingData):
-                    print("Debug: Successful call. Data obtained: \(trackingData.count)")
+            apiService.fetchData(referenceNumber: trimmedReference) { result in
+                DispatchQueue.main.async {
+                    self.isLoading = false
 
-                    if trackingData.isEmpty {
-                        // Show alert to ask if they wish to navigate to ManualInsertionView
-                        self.showManualInsertionAlert = true
-                        print("Debug: No data found. Asking user if they want to enter data manually.")
-                    } else {
-                        self.apiResponse = trackingData
-                        self.storedTrackingData = trackingData // Save data permanently
+                    switch result {
+                    case .success(let trackingData):
+                        print("Debug: Successful call. Data obtained: \(trackingData.count)")
 
-                        // Extract unique IDs using externalDeliveryID
-                        let uniqueIDsSet = Set(trackingData.map { $0.externalDeliveryID })
-                        self.uniqueObjectIDs = Array(uniqueIDsSet)
-                        self.uniqueObjectIDCount = uniqueObjectIDs.count
-                        print("Debug: Found \(self.uniqueObjectIDCount) unique IDs.")
+                        if trackingData.isEmpty {
+                            // Mostrar alerta para preguntar si desean navegar a ManualInsertionView
+                            self.showManualInsertionAlert = true
+                            print("Debug: No data found. Asking user if they want to enter data manually.")
+                        } else {
+                            self.apiResponse = trackingData
+                            self.storedTrackingData = trackingData // Guardar datos permanentemente
+
+                            // Extraer IDs únicos usando externalDeliveryID
+                            let uniqueIDsSet = Set(trackingData.map { $0.externalDeliveryID })
+                            self.uniqueObjectIDs = Array(uniqueIDsSet)
+                            self.uniqueObjectIDCount = uniqueObjectIDs.count
+                            print("Debug: Found \(self.uniqueObjectIDCount) unique IDs.")
+                        }
+
+                    case .failure(let error):
+                        // Manejar errores de red o de decodificación
+                        self.alertMessage = "An error occurred: \(error.localizedDescription)"
+                        self.showAlert = true
+                        print("Debug: An error occurred: \(error.localizedDescription).")
                     }
-
-                case .failure(let error):
-                    // Handle network or decoding errors
-                    self.alertMessage = "An error occurred: \(error.localizedDescription)"
-                    self.showAlert = true
-                    print("Debug: An error occurred: \(error.localizedDescription).")
                 }
             }
         }
-    }
-
     // Hide the keyboard
     func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)

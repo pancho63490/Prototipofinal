@@ -3,7 +3,7 @@ import SwiftUI
 struct VerificationView: View {
     var body: some View {
         VStack(alignment: .leading) {
-            Text("Verificación de herramientas en proceso")
+            Text("Verification in progress")
                 .font(.headline)
         }
         .padding()

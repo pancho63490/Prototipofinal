@@ -3,7 +3,11 @@ import Foundation
 struct APIService {
     func fetchData(referenceNumber: String, completion: @escaping (Result<[TrackingData], Error>) -> Void) {
         let encodedReferenceNumber = referenceNumber.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
-        let urlString = "https://ews-emea.api.bosch.com/Api_XDock/api/search/\(encodedReferenceNumber)"
+        
+        // Asegúrate de eliminar espacios adicionales después de codificar
+        let trimmedReferenceNumber = encodedReferenceNumber.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        let urlString = "https://ews-emea.api.bosch.com/Api_XDock/api/search/\(trimmedReferenceNumber)"
         
         guard let url = URL(string: urlString) else {
             completion(.failure(NSError(domain: "", code: 400, userInfo: [NSLocalizedDescriptionKey: "URL inválida"])))

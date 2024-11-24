@@ -5,7 +5,7 @@ class DeliveryAPIService {
     
     private init() {}
     
-    func sendTrackingData(_ data: TrackingData, completion: @escaping (Result<Void, Error>) -> Void) {
+    func sendTrackingData(_ data: TrackingData2, completion: @escaping (Result<Void, Error>) -> Void) {
         // Reemplaza con la URL de tu API
         guard let url = URL(string: "https://ews-emea.api.bosch.com/Api_XDock/api/insertManual") else {
             completion(.failure(APIError2.invalidURL))
@@ -41,7 +41,7 @@ class DeliveryAPIService {
                     completion(.failure(APIError2.serverError(statusCode: httpResponse.statusCode)))
                 }
             } else {
-                completion(.failure(APIError2.unknown))
+                completion(.failure(APIError.unknown))
             }
         }
         

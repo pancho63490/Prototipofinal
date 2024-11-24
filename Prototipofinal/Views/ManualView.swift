@@ -1,28 +1,28 @@
 import SwiftUI
 
 struct ManualInsertionView: View {
-    // Variables de estado para External Delivery ID y Supplier Name
+    // State variables for External Delivery ID and Supplier Name
     @State private var externalDeliveryID = ""
     @State private var supplierName = ""
     
-    // Lista de materiales
+    // List of materials
     @State private var materials: [Material] = []
     @State private var showingAddMaterialSheet = false
     
-    // Variables para alertas y mensajes de error
+    // Alert and error messages
     @State private var alertItem: AlertItem?
     
-    // Indicador de carga
+    // Loading indicator
     @State private var isLoading = false
     
-    // Environment para manejar la presentación
+    // Environment for presentation
     @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
         VStack(spacing: 20) {
-            // Título de la aplicación
+            // Application Title
             VStack {
-                Image(systemName: "shippingbox.fill") // Reemplaza con tu logo
+                Image(systemName: "shippingbox.fill") // Replace with your logo
                     .resizable()
                     .scaledToFit()
                     .frame(width: 50, height: 50)
@@ -37,30 +37,30 @@ struct ManualInsertionView: View {
             
             ScrollView {
                 VStack(spacing: 20) {
-                    // Información de la External Delivery ID y Supplier Name
+                    // External Delivery ID and Supplier Name Information
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Información de Entrega")
+                        Text("Delivery Information")
                             .font(.headline)
                             .foregroundColor(.gray)
                         
-                        CustomTextFieldWithIcon(icon: "doc.text", title: "ID de Entrega Externa", text: $externalDeliveryID)
+                        CustomTextFieldWithIcon(icon: "doc.text", title: "External Delivery ID", text: $externalDeliveryID)
                         
-                        CustomTextFieldWithIcon(icon: "person.crop.circle", title: "Nombre del Proveedor", text: $supplierName)
+                        CustomTextFieldWithIcon(icon: "person.crop.circle", title: "Supplier Name", text: $supplierName)
                     }
                     
-                    // Sección de Materiales
+                    // Materials Section
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Lista de Materiales")
+                        Text("Materials List")
                             .font(.headline)
                             .foregroundColor(.gray)
                         
-                        // Lista de materiales agregados
+                        // List of added materials
                         ForEach(materials) { material in
                             HStack {
                                 VStack(alignment: .leading) {
-                                    Text("Código: \(material.code)")
+                                    Text("Code: \(material.code)")
                                         .fontWeight(.bold)
-                                    Text("Cantidad: \(material.quantity)")
+                                    Text("Quantity: \(material.quantity) \(material.unit)")
                                 }
                                 Spacer()
                                 Button(action: {
@@ -75,27 +75,27 @@ struct ManualInsertionView: View {
                             .cornerRadius(8)
                         }
                         
-                        // Botón para agregar material
+                        // Button to add material
                         Button(action: {
                             showingAddMaterialSheet = true
                         }) {
                             HStack {
                                 Image(systemName: "plus.circle.fill")
-                                Text("Agregar Material")
+                                Text("Add Material")
                             }
                         }
                         .sheet(isPresented: $showingAddMaterialSheet) {
-                            // Hoja para agregar material
+                            // Sheet to add material
                             AddMaterialSheet(materials: $materials)
                         }
                     }
                     
-                    // Botón de enviar
+                    // Send Button
                     Button(action: {
                         hideKeyboard()
                         submitData()
                     }) {
-                        Text("Enviar")
+                        Text("Send")
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Color.blue)
@@ -104,9 +104,9 @@ struct ManualInsertionView: View {
                     }
                     .padding(.top, 20)
                     
-                    // Indicador de carga
+                    // Loading Indicator
                     if isLoading {
-                        ProgressView("Enviando datos...")
+                        ProgressView("Sending data...")
                             .padding()
                     }
                 }
@@ -114,14 +114,14 @@ struct ManualInsertionView: View {
                 .padding(.bottom, 40)
             }
         }
-        .navigationTitle("Ingreso Manual de Datos")
+        .navigationTitle("Manual Data Entry")
         .alert(item: $alertItem) { alertItem in
             Alert(
                 title: Text(alertItem.title),
                 message: Text(alertItem.message),
                 dismissButton: .default(Text("OK")) {
-                    if alertItem.title == "Éxito" {
-                        // Navegar de regreso después de 2 segundos
+                    if alertItem.title == "Success" {
+                        // Navigate back after 2 seconds
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                             presentationMode.wrappedValue.dismiss()
                         }
@@ -130,44 +130,45 @@ struct ManualInsertionView: View {
             )
         }
         .onTapGesture {
-            hideKeyboard() // Ocultar el teclado al tocar fuera
+            hideKeyboard() // Hide keyboard when tapping outside
         }
     }
     
-    // Función para eliminar un material
+    // Function to delete a material
     private func deleteMaterial(_ material: Material) {
         if let index = materials.firstIndex(where: { $0.id == material.id }) {
             materials.remove(at: index)
         }
     }
     
-    // Función para enviar los datos a la API
+    // Function to send data to the API
     private func submitData() {
-        // Validación de campos obligatorios
+        // Validate required fields
         if externalDeliveryID.isEmpty ||
             supplierName.isEmpty ||
             materials.isEmpty {
-            alertItem = AlertItem(title: "Error", message: "Por favor, completa todos los campos obligatorios.")
+            alertItem = AlertItem(title: "Error", message: "Please complete all required fields.")
             return
         }
         
         isLoading = true
         
-        // Crear los objetos TrackingData
+        // Create TrackingData objects
         let trackingDataList = materials.map { material in
-            TrackingData(
+            TrackingData2(
                 externalDeliveryID: externalDeliveryID,
                 material: material.code,
                 deliveryQty: material.quantity,
-                deliveryNo: "0",
+                deliveryNo: externalDeliveryID, // Assign unit
                 supplierVendor: "0",
                 supplierName: supplierName,
-                container: nil,
-                src: "Manual" // Asignar "Manual" según tu requerimiento
+                container: "x",
+                src: "Manual",
+                unit: material.unit // Assign "Manual" as per your requirement
             )
         }
         
-        // Enviar cada TrackingData a la API
+        // Send each TrackingData to the API
         let group = DispatchGroup()
         var encounteredError: Error?
         
@@ -176,9 +177,9 @@ struct ManualInsertionView: View {
             DeliveryAPIService.shared.sendTrackingData(trackingData) { result in
                 switch result {
                 case .success():
-                    print("TrackingData enviado exitosamente: \(trackingData)")
+                    print("TrackingData sent successfully: \(trackingData)")
                 case .failure(let error):
-                    print("Error al enviar TrackingData: \(error.localizedDescription)")
+                    print("Error sending TrackingData: \(error.localizedDescription)")
                     encounteredError = error
                 }
                 group.leave()
@@ -188,22 +189,22 @@ struct ManualInsertionView: View {
         group.notify(queue: .main) {
             isLoading = false
             if let error = encounteredError {
-                alertItem = AlertItem(title: "Error", message: "Error al enviar datos: \(error.localizedDescription)")
+                alertItem = AlertItem(title: "Error", message: "Error sending data: \(error.localizedDescription)")
             } else {
-                alertItem = AlertItem(title: "Éxito", message: "Datos enviados exitosamente.")
+                alertItem = AlertItem(title: "Success", message: "Data sent successfully.")
                 clearFields()
             }
         }
     }
     
-    // Función para limpiar los campos después de enviar
+    // Function to clear fields after sending
     private func clearFields() {
         externalDeliveryID = ""
         supplierName = ""
         materials.removeAll()
     }
     
-    // Función para ocultar el teclado
+    // Function to hide the keyboard
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
@@ -231,41 +232,46 @@ struct ManualInsertionView: View {
         }
     }
     
-    // Estructura para Material
+    // Structure for Material
     struct Material: Identifiable {
         let id = UUID()
         var code: String
         var quantity: String
+        var unit: String // Unit of measurement
     }
     
-    // Vista para Agregar Material (Simplificada)
+    // View to Add Material
     struct AddMaterialSheet: View {
         @Environment(\.presentationMode) var presentationMode
         @Binding var materials: [Material]
         
         @State private var materialCode = ""
         @State private var quantity = ""
+        @State private var selectedUnit = "pcs" // Default unit of measurement
         
-        // Para el escáner de cámara
+        // Unit options
+        let units = ["Liters", "kg", "Pallets", "pcs", "Grams", "Meters", "cm"]
+        
+        // For camera scanner
         @State private var isShowingScanner = false
         @State private var isShowingQuantityScanner = false
         
-        // NumberFormatter para validar cantidad
+        // NumberFormatter to validate quantity
         let numberFormatter: NumberFormatter = {
             let formatter = NumberFormatter()
-            formatter.numberStyle = .none
+            formatter.numberStyle = .decimal
             return formatter
         }()
         
         var body: some View {
             NavigationView {
                 VStack(spacing: 20) {
-                    // Código del Material
+                    // Material Code
                     HStack {
-                        CustomTextFieldWithIcon(icon: "barcode.viewfinder", title: "Código del Material", text: $materialCode)
+                        CustomTextFieldWithIcon(icon: "barcode.viewfinder", title: "Material Code", text: $materialCode)
                         
                         Button(action: {
-                            // Abrir escáner para código
+                            // Open scanner for code
                             isShowingScanner = true
                         }) {
                             Image(systemName: "camera")
@@ -273,7 +279,7 @@ struct ManualInsertionView: View {
                                 .padding()
                         }
                         .sheet(isPresented: $isShowingScanner) {
-                            // Usamos tu método existente CameraScannerView
+                            // Implement your scanner view here
                             CameraScannerWrapperView(scannedCode: .constant(nil), onCodeScanned: { code in
                                 materialCode = code
                                 isShowingScanner = false
@@ -281,12 +287,12 @@ struct ManualInsertionView: View {
                         }
                     }
                     
-                    // Cantidad
+                    // Quantity
                     HStack {
-                        CustomTextFieldWithIcon(icon: "number", title: "Cantidad", text: $quantity, keyboardType: .numberPad)
+                        CustomTextFieldWithIcon(icon: "number", title: "Quantity", text: $quantity, keyboardType: .decimalPad)
                         
                         Button(action: {
-                            // Abrir escáner para cantidad
+                            // Open scanner for quantity
                             isShowingQuantityScanner = true
                         }) {
                             Image(systemName: "camera")
@@ -294,33 +300,48 @@ struct ManualInsertionView: View {
                                 .padding()
                         }
                         .sheet(isPresented: $isShowingQuantityScanner) {
-                            // Usamos tu método existente CameraScannerView
+                            // Implement your scanner view here
                             CameraScannerWrapperView(scannedCode: .constant(nil), onCodeScanned: { scannedQuantity in
-                                // Validar que la cantidad escaneada sea numérica
+                                // Validate that the scanned quantity is numeric
                                 if let _ = numberFormatter.number(from: scannedQuantity) {
                                     quantity = scannedQuantity
+                                } else {
+                                    // Handle error if quantity is not valid
+                                    // You can implement an alert here if desired
                                 }
                                 isShowingQuantityScanner = false
                             })
                         }
                     }
                     
-                    // Botón para agregar material
+                    // Unit of Measurement Picker
+                    Picker("Unit of Measurement", selection: $selectedUnit) {
+                        ForEach(units, id: \.self) { unit in
+                            Text(unit).tag(unit)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                    
+                    // Button to add material
                     Button(action: {
-                        // Agregar material a la lista si la cantidad es numérica
+                        // Add material to the list if quantity is numeric
                         if let _ = numberFormatter.number(from: quantity), !materialCode.isEmpty {
-                            let newMaterial = Material(code: materialCode, quantity: quantity)
+                            let newMaterial = Material(code: materialCode, quantity: quantity, unit: selectedUnit)
                             materials.append(newMaterial)
-                            // Limpiar campos
+                            // Clear fields
                             materialCode = ""
                             quantity = ""
+                            selectedUnit = units.first ?? "pcs" // Reset to default unit
                             presentationMode.wrappedValue.dismiss()
                         } else {
-                            // Mostrar error si la cantidad no es válida
-                            // Puedes implementar una alerta aquí si lo deseas
+                            // Show error if quantity is not valid
+                            // You can implement an alert here if desired
                         }
                     }) {
-                        Text("Agregar")
+                        Text("Add")
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background((materialCode.isEmpty || quantity.isEmpty || numberFormatter.number(from: quantity) == nil) ? Color.gray : Color.blue)
@@ -332,22 +353,48 @@ struct ManualInsertionView: View {
                     Spacer()
                 }
                 .padding()
-                .navigationTitle("Agregar Material")
-                .navigationBarItems(trailing: Button("Cancelar") {
+                .navigationTitle("Add Material")
+                .navigationBarItems(trailing: Button("Cancel") {
                     presentationMode.wrappedValue.dismiss()
                 })
             }
         }
     }
-    
-    struct ManualInsertionView_Previews: PreviewProvider {
-        static var previews: some View {
-            ManualInsertionView()
-        }
-    }
 }
+
+// Structure for Alerts
 struct AlertItem: Identifiable {
     var id = UUID()
     var title: String
     var message: String
+}
+
+// Consolidated TrackingData Model
+struct TrackingData2: Codable {
+    let externalDeliveryID: String
+    let material: String
+    let deliveryQty: String
+    let deliveryNo: String
+    let supplierVendor: String
+    let supplierName: String
+    let container: String?
+    let src: String?
+    let unit: String?
+    enum CodingKeys: String, CodingKey {
+        case externalDeliveryID = "EXTERNAL_DELVRY_ID"
+        case material = "MATERIAL"
+        case deliveryQty = "DELIVERY_QTY"
+        case deliveryNo = "DELIVERY_NO"
+        case supplierVendor = "SUPPLIER_VENDOR"
+        case supplierName = "SUPPLIER_NAME"
+        case container = "CONTAINER"
+        case src = "SRC"
+        case unit = "UNIT"
+    }
+}
+
+struct ManualInsertionView_Previews: PreviewProvider {
+    static var previews: some View {
+        ManualInsertionView()
+    }
 }

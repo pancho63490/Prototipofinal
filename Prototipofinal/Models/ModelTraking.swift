@@ -1,7 +1,6 @@
 import Foundation
-
-// Modelo para cada TrackingData
-struct TrackingData: Codable {
+struct TrackingData: Codable, Identifiable {
+    let id = UUID()
     let externalDeliveryID: String
     let material: String
     let deliveryQty: String
@@ -10,6 +9,10 @@ struct TrackingData: Codable {
     let supplierName: String
     let container: String?
     let src: String?
+    let unit: String
+    let pesoBruto: Decimal?
+    let pesoNeto: Decimal?
+    
     enum CodingKeys: String, CodingKey {
         case externalDeliveryID = "EXTERNAL_DELVRY_ID"
         case material = "MATERIAL"
@@ -19,8 +22,12 @@ struct TrackingData: Codable {
         case supplierName = "SUPPLIER_NAME"
         case container = "CONTAINER"
         case src = "SRC"
+        case unit = "UNIT"
+        case pesoBruto = "Peso_bruto" // Mapeo correcto
+        case pesoNeto = "Peso_neto"     // Mapeo correcto
     }
 }
+
 
 struct DeliveryResponse: Codable {
     let found: Bool

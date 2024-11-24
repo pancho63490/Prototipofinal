@@ -541,7 +541,10 @@ struct MaterialChecklistView: View {
                             QUANTITY: entry.quantity,
                             LOCATION: location,
                             DELIVERY_TYPE: nil,
-                            BILL: "Y" // Will adjust later
+                            BILL: "Y" ,
+                            UNIT: trackingEntry.unit,
+                            Peso_neto:trackingEntry.pesoNeto,
+                            Peso_bruto: trackingEntry.pesoBruto
                         )
                         groupedMaterials[key] = materialData
                     } else {
@@ -587,7 +590,10 @@ struct MaterialChecklistView: View {
                                 QUANTITY: 0, // No quantity added
                                 LOCATION: location,
                                 DELIVERY_TYPE: nil,
-                                BILL: "D"
+                                BILL: "D",
+                                UNIT: trackingEntry.unit,
+                                Peso_neto:trackingEntry.pesoNeto,
+                                Peso_bruto: trackingEntry.pesoBruto
                             )
                             groupedMaterials[key] = materialData
                         }
@@ -617,7 +623,7 @@ struct MaterialChecklistView: View {
         }
 
         // Create the request to the API
-        let urlString = "https://ews-emea.api.bosch.com/Api_XDock/api/update"
+        let urlString = "https://ews-emea.api.bosch.com/Api_XDock/api/Update"
         guard let url = URL(string: urlString) else {
             showError(message: "Invalid URL.")
             return
@@ -705,12 +711,15 @@ struct MaterialData: Codable {
     let LOCATION: String
     let DELIVERY_TYPE: String?
     var BILL: String
+    var UNIT: String
+    let Peso_neto : Decimal?
+    let Peso_bruto : Decimal?
 }
 
 
 
 import SwiftUI
-
+/*
 struct MaterialChecklistView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
@@ -777,3 +786,4 @@ struct MaterialChecklistView_Previews: PreviewProvider {
     
    
 }
+*/

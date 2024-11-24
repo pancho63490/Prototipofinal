@@ -5,102 +5,164 @@ struct PrintView: View {
     var trackingData: [TrackingData]
     var customLabels: Int
     var useCustomLabels: Bool
-    @State private var shouldDismiss = false
     
-    @Environment(\.presentationMode) var presentationMode // Controla la navegación hacia atrás
-    @Binding var finalObjectIDs: [String] // Para pasar los Object IDs generados a la vista principal
+    @Environment(\.dismiss) var dismiss // Recommended usage in modern SwiftUI
+    @Binding var finalObjectIDs: [String] // To pass the generated Object IDs to the main view
     
     @State private var isPrintingComplete = false
     @State private var currentPallet = 1
-    @State private var showErrorAlert = false // Controla la presentación de la alerta
-    @State private var errorMessage = "" // Guarda el mensaje del error
-    @State private var objectIDs: [String] = [] // Arreglo para almacenar los Object IDs como cadenas
+    @State private var objectIDs: [String] = [] // Array to store Object IDs as strings
+    
+    // Enum to handle different types of alerts
+    enum ActiveAlert: Identifiable {
+        case genericError(message: String, retryAction: () -> Void, reprintAction: () -> Void)
+        case objectIDsExist(message: String)
+        
+        var id: String {
+            switch self {
+            case .genericError(let message, _, _):
+                return "genericError-\(message)"
+            case .objectIDsExist(let message):
+                return "objectIDsExist-\(message)"
+            }
+        }
+    }
+    
+    @State private var activeAlert: ActiveAlert?
     
     var body: some View {
         VStack {
-            Text("Impresión en Proceso")
+            Text("Printing in Progress")
                 .font(.title)
                 .padding()
             
             if !isPrintingComplete {
-                ProgressView("Imprimiendo \(currentPallet) de \(useCustomLabels ? customLabels : distinctMaterialCount()) etiquetas...")
+                ProgressView("Printing \(currentPallet)/\(totalLabels()) labels...")
                     .progressViewStyle(CircularProgressViewStyle())
                     .padding()
             } else {
-                Text("Impresión completada")
+                Text("Printing Complete")
                     .foregroundColor(.green)
                     .font(.headline)
                     .padding()
             }
         }
         .onAppear {
+            print("PrintView appeared. Starting Object ID request and print process.")
             requestObjectIDsAndStartPrintProcess()
         }
         .onChange(of: isPrintingComplete) { complete in
             if complete {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                    self.finalObjectIDs = objectIDs // Pasar los object IDs generados
-                    self.presentationMode.wrappedValue.dismiss() // Regresar al menú principal
+                    self.finalObjectIDs = objectIDs // Pass the generated Object IDs
+                    self.dismiss() // Return to the main menu
                 }
             }
         }
-        .alert(isPresented: $showErrorAlert) {
-            Alert(
-                title: Text("Error"),
-                message: Text(errorMessage),
-                dismissButton: .default(Text("OK")) {
-                    self.presentationMode.wrappedValue.dismiss() // Volver al inicio
-                }
-            )
+        .alert(item: $activeAlert) { alert in
+            switch alert {
+            case .genericError(let message, let retryAction, let reprintAction):
+                return Alert(
+                    title: Text("Error"),
+                    message: Text(message),
+                    primaryButton: .default(Text("Cancel")) {
+                        // Dismiss the view when "Cancel" is tapped
+                        self.dismiss()
+                    },
+                    secondaryButton: .default(Text("Reprint")) {
+                        reprintAction()
+                    }
+                )
+            case .objectIDsExist(let message):
+                return Alert(
+                    title: Text("Existing Object IDs"),
+                    message: Text(message),
+                    primaryButton: .default(Text("Reprint")) {
+                        fetchExistingObjectIDs()
+                    },
+                    secondaryButton: .cancel(Text("Cancel")) {
+                        print("Alert dismissed. Closing view due to an error.")
+                        self.dismiss() // Return to the start
+                    }
+                )
+            }
         }
     }
     
-    // Función para contar el número de materiales distintos en trackingData
+    // Function to count the number of distinct materials in trackingData
     func distinctMaterialCount() -> Int {
         let uniqueMaterials = Set(trackingData.map { $0.material })
+        print("Number of distinct materials: \(uniqueMaterials.count)")
         return uniqueMaterials.count
     }
     
-    // Función para solicitar Object IDs a la API y luego iniciar el proceso de impresión
+    // Function to get the total number of labels to print
+    func totalLabels() -> Int {
+        return useCustomLabels ? customLabels : distinctMaterialCount()
+    }
+    
+    // Function to request Object IDs from the API and then start the printing process
     func requestObjectIDsAndStartPrintProcess() {
-        let totalLabels = useCustomLabels ? customLabels : distinctMaterialCount()
+        let totalLabels = self.totalLabels()
         guard let firstTrackingData = trackingData.first else {
-            showError("No hay datos de seguimiento disponibles.")
+            showErrorAlert(.genericError(message: "No tracking data available.", retryAction: {
+                self.requestObjectIDsAndStartPrintProcess()
+            }, reprintAction: {
+                self.fetchExistingObjectIDs()
+            }))
             return
         }
         
-        let requestData = [
-            "REF_NUM": firstTrackingData.externalDeliveryID,
-            "QTY": totalLabels
-        ] as [String: Any]
+        let requestData: [String: Any] = [
+            "QTY": totalLabels,
+            "REF_NUM": firstTrackingData.externalDeliveryID
+        ]
+        
+        print("Total labels to print: \(totalLabels)")
+        print("Sending request to API with the following data: \(requestData)")
         
         APIServiceobj().requestObjectIDs(requestData: requestData) { result in
             DispatchQueue.main.async {
                 switch result {
                 case .success(let objectIDResponse):
-                    guard !objectIDResponse.objectIDs.isEmpty else {
-                        showError("No se obtuvieron Object IDs de la API.")
+                    print("API response data: \(objectIDResponse)")
+                    guard let objectIDs = objectIDResponse.objectIDs, !objectIDs.isEmpty else {
+                        showErrorAlert(.genericError(message: "No Object IDs received from the API.", retryAction: {
+                            self.requestObjectIDsAndStartPrintProcess()
+                        }, reprintAction: {
+                            self.fetchExistingObjectIDs()
+                        }))
                         return
                     }
-                    self.objectIDs = objectIDResponse.objectIDs.map { String($0) }
+                    self.objectIDs = objectIDs.map { String($0) }
                     self.startPrintProcess()
                 case .failure(let error):
-                    showError("Error al obtener Object IDs: \(error.localizedDescription)")
+                    if case APIServiceobj.APIError.objectIDsAlreadyExist(let message) = error {
+                        // Show an alert to reprint using existing Object IDs
+                        print("Object IDs already exist for REF_NUM: \(self.referenceNumber).")
+                        self.activeAlert = .objectIDsExist(message: "Object IDs already exist for this REF_NUM. Would you like to reprint using the existing Object IDs?")
+                    } else {
+                        showErrorAlert(.genericError(message: "Error obtaining Object IDs: \(error.localizedDescription)", retryAction: {
+                            self.requestObjectIDsAndStartPrintProcess()
+                        }, reprintAction: {
+                            self.fetchExistingObjectIDs()
+                        }))
+                    }
                 }
             }
         }
     }
     
-    // Función para iniciar el proceso de impresión después de obtener los Object IDs
+    // Function to start the printing process after obtaining Object IDs
     func startPrintProcess() {
         currentPallet = 1
         let printController = PrintViewController()
         printNextPallet(printController: printController)
     }
     
-    // Función para imprimir cada etiqueta utilizando los Object IDs
+    // Function to print each label using the Object IDs
     func printNextPallet(printController: PrintViewController) {
-        let totalLabels = useCustomLabels ? customLabels : distinctMaterialCount()
+        let totalLabels = self.totalLabels()
         
         guard currentPallet <= totalLabels else {
             isPrintingComplete = true
@@ -112,31 +174,85 @@ struct PrintView: View {
         if currentPallet <= objectIDs.count {
             objectID = objectIDs[currentPallet - 1]
         } else {
-            showError("No hay suficientes Object IDs generados para completar la impresión.")
+            showErrorAlert(.genericError(message: "Not enough Object IDs generated to complete printing.", retryAction: {
+                self.startPrintProcess()
+            }, reprintAction: {
+                self.fetchExistingObjectIDs()
+            }))
             return
         }
+        
+        print("Starting print for pallet \(currentPallet) with ObjectID: \(objectID)")
         
         printController.startPrinting(
             trackingNumber: referenceNumber,
             invoiceNumber: referenceNumber,
             palletNumber: currentPallet,
-            objectID: objectID
+            objectID: objectID,
+            totalLabels: totalLabels
         ) { success, error in
             if success {
                 DispatchQueue.main.async {
-                    print("Etiqueta \(self.currentPallet) impresa con ObjectID: \(objectID)")
+                    print("Label \(self.currentPallet)/\(self.totalLabels()) printed with ObjectID: \(objectID)")
                     self.currentPallet += 1
                     self.printNextPallet(printController: printController)
                 }
             } else if let error = error {
-                showError(error.localizedDescription)
+                DispatchQueue.main.async {
+                    self.showErrorAlert(.genericError(message: error.localizedDescription, retryAction: {
+                        self.printNextPallet(printController: printController)
+                    }, reprintAction: {
+                        self.fetchExistingObjectIDs()
+                    }))
+                }
             }
         }
     }
     
-    // Función para mostrar el mensaje de error en la alerta
-    func showError(_ message: String) {
-        self.errorMessage = message
-        self.showErrorAlert = true
+    // Function to show the error message in the alert
+    func showErrorAlert(_ alertType: ActiveAlert) {
+        print("Error: \(alertType)")
+        self.activeAlert = alertType
+    }
+    
+    // Function to handle reprinting (call the second API)
+    func fetchExistingObjectIDs() {
+        guard let firstTrackingData = trackingData.first else {
+            showErrorAlert(.genericError(message: "No tracking data available for reprinting.", retryAction: {
+                self.fetchExistingObjectIDs()
+            }, reprintAction: {
+                // Optional: You could add another action or simply close
+                self.dismiss()
+            }))
+            return
+        }
+        
+        let externalDeliveryID = firstTrackingData.externalDeliveryID
+        print("Fetching existing Object IDs for REF_NUM: \(externalDeliveryID)")
+        
+        APIServiceobj().searchObjectIDs(x: externalDeliveryID) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let backupResponse):
+                    print("Search response data: \(backupResponse)")
+                    guard let backupObjectIDs = backupResponse.objectIDs, !backupObjectIDs.isEmpty else {
+                        showErrorAlert(.genericError(message: "No existing Object IDs found for this REF_NUM.", retryAction: {
+                            self.fetchExistingObjectIDs()
+                        }, reprintAction: {
+                            self.dismiss()
+                        }))
+                        return
+                    }
+                    self.objectIDs = backupObjectIDs.map { String($0) }
+                    self.startPrintProcess()
+                case .failure(let error):
+                    showErrorAlert(.genericError(message: "Error searching for existing Object IDs: \(error.localizedDescription)", retryAction: {
+                        self.fetchExistingObjectIDs()
+                    }, reprintAction: {
+                        self.dismiss()
+                    }))
+                }
+            }
+        }
     }
 }

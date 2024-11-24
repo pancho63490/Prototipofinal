@@ -24,7 +24,7 @@ struct BarcodeScannerView: View {
             if let code = scannedCode {
                 VStack {
                     Spacer()
-                    Text("Código escaneado: \(code)")
+                    Text("Scanned Code: \(code)")
                         .font(.title)
                         .foregroundColor(.white)
                         .padding()
@@ -36,7 +36,7 @@ struct BarcodeScannerView: View {
         }
         .alert(isPresented: $showingAlert) {
             Alert(
-                title: Text("Código Escaneado"),
+                title: Text("Scanned Code"),
                 message: Text(scannedCode ?? "N/A"),
                 dismissButton: .default(Text("OK")) {
                     // Reiniciar la sesión de captura después de cerrar la alerta

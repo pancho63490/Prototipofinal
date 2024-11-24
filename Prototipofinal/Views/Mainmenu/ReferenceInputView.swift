@@ -6,11 +6,13 @@ struct ReferenceInputView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            TextField("Número de referencia", text: $referenceNumber)
+            TextField("Reference Number", text: $referenceNumber )
                 .textFieldStyle(PlainTextFieldStyle())
                 .padding()
                 .background(Color(.systemGray6))
                 .cornerRadius(10)
+                .onChange(of: referenceNumber) { newValue in
+                    referenceNumber = newValue.uppercased()}
                 .overlay(
                     Button(action: {
                         isScanning = true
