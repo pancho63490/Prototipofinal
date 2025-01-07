@@ -28,7 +28,7 @@ struct ManualInsertionView: View {
                     .frame(width: 50, height: 50)
                     .foregroundColor(.blue)
                 
-                Text("NixiScan")
+                Text("XDOCK")
                     .font(.title)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)

@@ -9,7 +9,7 @@ struct AppHeader: View {
                 .frame(width: 60, height: 60)
                 .foregroundColor(.blue)
             
-            Text("NixiScan")
+            Text("XDOCK")
                 .font(.system(size: 28, weight: .semibold))
                 .foregroundColor(.primary)
         }

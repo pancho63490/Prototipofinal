@@ -18,8 +18,9 @@ struct ContentView: View {
     @State private var shouldNavigateToExportView = false
     @State private var navigateToExportView = false
     @State private var shouldNavigateToManualInsertion = false
-    @State private var showManualInsertionAlert = false // Added to control the new alert
-    let shipmentTypes = ["More Information", "Printing", "Verification", "Export"]
+    @State private var showManualInsertionAlert = false
+    @State private var navigateToLogisticsVerificationView = false// Added to control the new alert
+    let shipmentTypes = ["More Information", "Printing", "Verification","Logis", "Export"]
     let apiService = APIService()
 
     var body: some View {
@@ -58,7 +59,10 @@ struct ContentView: View {
                         PrintingView(useCustomLabels: $useCustomLabels, customLabels: $customLabels)
                     } else if selectedShipmentType == "Verification" {
                         EmptyView()
-                    } else if selectedShipmentType == "Export" {
+                    } else if selectedShipmentType == "Logis"{
+                        EmptyView()
+                    }
+                    else if selectedShipmentType == "Export" {
                         EmptyView()
                     } else {
                         EmptyView()
@@ -93,6 +97,13 @@ struct ContentView: View {
                                 navigateToExportView = true
                             }
                     }
+                    if selectedShipmentType == "Logis" {
+                        Text("Redirecting to LogisView...")
+                            .onAppear {
+                                navigateToLogisticsVerificationView = true
+                            }
+                    }
+                    
                     NavigationLink(
                         destination: ManualInsertionView(),
                         isActive: $shouldNavigateToManualInsertion
@@ -101,6 +112,11 @@ struct ContentView: View {
                     }
 
                     // Hidden NavigationLinks for programmatic navigation
+                    NavigationLink(
+                        destination: LogisticsVerificationView(),
+                        isActive: $navigateToLogisticsVerificationView,
+                        label: { EmptyView() }
+                    )
                     NavigationLink(
                         destination: ExportView(),
                         isActive: $navigateToExportView,

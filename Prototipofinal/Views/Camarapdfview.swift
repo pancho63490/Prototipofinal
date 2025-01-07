@@ -11,7 +11,7 @@ struct CameraView: View {
 
     var body: some View {
         VStack {
-            Text("NixiScan - Cámara")
+            Text("XDOCK - Cámara")
                 .font(.largeTitle)
                 .padding()
 
