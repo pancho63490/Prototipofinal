@@ -12,6 +12,7 @@ struct TrackingData: Codable, Identifiable {
     let unit: String
     let pesoBruto: Decimal?
     let pesoNeto: Decimal?
+   
     
     enum CodingKeys: String, CodingKey {
         case externalDeliveryID = "EXTERNAL_DELVRY_ID"
@@ -23,11 +24,11 @@ struct TrackingData: Codable, Identifiable {
         case container = "CONTAINER"
         case src = "SRC"
         case unit = "UNIT"
-        case pesoBruto = "Peso_bruto" // Mapeo correcto
-        case pesoNeto = "Peso_neto"     // Mapeo correcto
+        case pesoBruto = "Peso_bruto"
+        case pesoNeto = "Peso_neto"
+  
     }
 }
-
 
 struct DeliveryResponse: Codable {
     let found: Bool

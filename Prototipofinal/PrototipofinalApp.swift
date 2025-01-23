@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct PrototipofinalApp: App {
+    @StateObject var shipmentState = ShipmentState()
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(shipmentState)
         }
     }
 }

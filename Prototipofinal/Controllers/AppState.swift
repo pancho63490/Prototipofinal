@@ -1,8 +1,7 @@
-//
-//  AppState.swift
-//  Prototipofinal
-//
-//  Created by Frank Perez on 07/01/25.
-//
+import SwiftUI
+import Combine
 
-import Foundation
+class ShipmentState: ObservableObject {
+    /// Esta es la propiedad global que almacenará "Inbond" o "Domestic"
+    @Published var selectedInboundType: String? = nil
+}
