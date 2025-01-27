@@ -56,19 +56,29 @@ struct ManualInsertionView: View {
                         
                         // List of added materials
                         ForEach(materials) { material in
-                            HStack {
-                                VStack(alignment: .leading) {
-                                    Text("Code: \(material.code)")
-                                        .fontWeight(.bold)
-                                    Text("Quantity: \(material.quantity) \(material.unit)")
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text("Code: \(material.code)")
+                                            .fontWeight(.bold)
+                                        Text("Quantity: \(material.quantity) \(material.unit)")
+                                    }
+                                    Spacer()
+                                    Button(action: {
+                                        deleteMaterial(material)
+                                    }) {
+                                        Image(systemName: "trash")
+                                            .foregroundColor(.red)
+                                    }
                                 }
-                                Spacer()
-                                Button(action: {
-                                    deleteMaterial(material)
-                                }) {
-                                    Image(systemName: "trash")
-                                        .foregroundColor(.red)
+                                
+                                HStack {
+                                    Text("Gross Weight: \(material.grossWeight) kg")
+                                    Spacer()
+                                    Text("Net Weight: \(material.netWeight) kg")
                                 }
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
                             }
                             .padding()
                             .background(Color(.systemGray6))
@@ -164,7 +174,9 @@ struct ManualInsertionView: View {
                 supplierName: supplierName,
                 container: "x",
                 src: "Manual",
-                unit: material.unit // Assign "Manual" as per your requirement
+                unit: material.unit, // Assign "Manual" as per your requirement
+                grossWeight: material.grossWeight,
+                netWeight: material.netWeight
             )
         }
         
@@ -238,6 +250,8 @@ struct ManualInsertionView: View {
         var code: String
         var quantity: String
         var unit: String // Unit of measurement
+        var grossWeight: String // Gross weight in kg
+        var netWeight: String // Net weight in kg
     }
     
     // View to Add Material
@@ -248,6 +262,8 @@ struct ManualInsertionView: View {
         @State private var materialCode = ""
         @State private var quantity = ""
         @State private var selectedUnit = "pcs" // Default unit of measurement
+        @State private var grossWeight = ""
+        @State private var netWeight = ""
         
         // Unit options
         let units = ["Liters", "kg", "Pallets", "pcs", "Grams", "Meters", "cm"]
@@ -255,8 +271,10 @@ struct ManualInsertionView: View {
         // For camera scanner
         @State private var isShowingScanner = false
         @State private var isShowingQuantityScanner = false
+        @State private var isShowingGrossWeightScanner = false
+        @State private var isShowingNetWeightScanner = false
         
-        // NumberFormatter to validate quantity
+        // NumberFormatter to validate quantity and weights
         let numberFormatter: NumberFormatter = {
             let formatter = NumberFormatter()
             formatter.numberStyle = .decimal
@@ -265,94 +283,173 @@ struct ManualInsertionView: View {
         
         var body: some View {
             NavigationView {
-                VStack(spacing: 20) {
-                    // Material Code
-                    HStack {
-                        CustomTextFieldWithIcon(icon: "barcode.viewfinder", title: "Material Code", text: $materialCode)
+                ScrollView {
+                    VStack(spacing: 20) {
+                        // Material Code
+                        HStack {
+                            CustomTextFieldWithIcon(icon: "barcode.viewfinder", title: "Material Code", text: $materialCode)
+                            
+                            Button(action: {
+                                // Open scanner for code
+                                isShowingScanner = true
+                            }) {
+                                Image(systemName: "camera")
+                                    .foregroundColor(.blue)
+                                    .padding()
+                            }
+                            .sheet(isPresented: $isShowingScanner) {
+                                // Implement your scanner view here
+                                CameraScannerWrapperView(scannedCode: .constant(nil), onCodeScanned: { code in
+                                    materialCode = code
+                                    isShowingScanner = false
+                                })
+                            }
+                        }
                         
-                        Button(action: {
-                            // Open scanner for code
-                            isShowingScanner = true
-                        }) {
-                            Image(systemName: "camera")
-                                .foregroundColor(.blue)
-                                .padding()
+                        // Quantity
+                        HStack {
+                            CustomTextFieldWithIcon(icon: "number", title: "Quantity", text: $quantity, keyboardType: .decimalPad)
+                            
+                            Button(action: {
+                                // Open scanner for quantity
+                                isShowingQuantityScanner = true
+                            }) {
+                                Image(systemName: "camera")
+                                    .foregroundColor(.blue)
+                                    .padding()
+                            }
+                            .sheet(isPresented: $isShowingQuantityScanner) {
+                                // Implement your scanner view here
+                                CameraScannerWrapperView(scannedCode: .constant(nil), onCodeScanned: { scannedQuantity in
+                                    // Validate that the scanned quantity is numeric
+                                    if let _ = numberFormatter.number(from: scannedQuantity) {
+                                        quantity = scannedQuantity
+                                    } else {
+                                        // Handle error if quantity is not valid
+                                        // You can implement an alert here if desired
+                                    }
+                                    isShowingQuantityScanner = false
+                                })
+                            }
                         }
-                        .sheet(isPresented: $isShowingScanner) {
-                            // Implement your scanner view here
-                            CameraScannerWrapperView(scannedCode: .constant(nil), onCodeScanned: { code in
-                                materialCode = code
-                                isShowingScanner = false
-                            })
-                        }
-                    }
-                    
-                    // Quantity
-                    HStack {
-                        CustomTextFieldWithIcon(icon: "number", title: "Quantity", text: $quantity, keyboardType: .decimalPad)
                         
+                        // Gross Weight
+                        HStack {
+                            CustomTextFieldWithIcon(icon: "scalemass", title: "Gross Weight (kg)", text: $grossWeight, keyboardType: .decimalPad)
+                            
+                            Button(action: {
+                                // Open scanner for gross weight
+                                isShowingGrossWeightScanner = true
+                            }) {
+                                Image(systemName: "camera")
+                                    .foregroundColor(.blue)
+                                    .padding()
+                            }
+                            .sheet(isPresented: $isShowingGrossWeightScanner) {
+                                // Implement your scanner view here
+                                CameraScannerWrapperView(scannedCode: .constant(nil), onCodeScanned: { scannedGrossWeight in
+                                    // Validate that the scanned gross weight is numeric
+                                    if let _ = numberFormatter.number(from: scannedGrossWeight) {
+                                        grossWeight = scannedGrossWeight
+                                    } else {
+                                        // Handle error if gross weight is not valid
+                                        // You can implement an alert here if desired
+                                    }
+                                    isShowingGrossWeightScanner = false
+                                })
+                            }
+                        }
+                        
+                        // Net Weight
+                        HStack {
+                            CustomTextFieldWithIcon(icon: "scalemass.fill", title: "Net Weight (kg)", text: $netWeight, keyboardType: .decimalPad)
+                            
+                            Button(action: {
+                                // Open scanner for net weight
+                                isShowingNetWeightScanner = true
+                            }) {
+                                Image(systemName: "camera")
+                                    .foregroundColor(.blue)
+                                    .padding()
+                            }
+                            .sheet(isPresented: $isShowingNetWeightScanner) {
+                                // Implement your scanner view here
+                                CameraScannerWrapperView(scannedCode: .constant(nil), onCodeScanned: { scannedNetWeight in
+                                    // Validate that the scanned net weight is numeric
+                                    if let _ = numberFormatter.number(from: scannedNetWeight) {
+                                        netWeight = scannedNetWeight
+                                    } else {
+                                        // Handle error if net weight is not valid
+                                        // You can implement an alert here if desired
+                                    }
+                                    isShowingNetWeightScanner = false
+                                })
+                            }
+                        }
+                        
+                        // Unit of Measurement Picker
+                        Picker("Unit of Measurement", selection: $selectedUnit) {
+                            ForEach(units, id: \.self) { unit in
+                                Text(unit).tag(unit)
+                            }
+                        }
+                        .pickerStyle(MenuPickerStyle())
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                        
+                        // Button to add material
                         Button(action: {
-                            // Open scanner for quantity
-                            isShowingQuantityScanner = true
+                            // Add material to the list if quantity and weights are numeric
+                            if let _ = numberFormatter.number(from: quantity),
+                               let _ = numberFormatter.number(from: grossWeight),
+                               let _ = numberFormatter.number(from: netWeight),
+                               !materialCode.isEmpty {
+                                let newMaterial = Material(
+                                    code: materialCode,
+                                    quantity: quantity,
+                                    unit: selectedUnit,
+                                    grossWeight: grossWeight,
+                                    netWeight: netWeight
+                                )
+                                materials.append(newMaterial)
+                                // Clear fields
+                                materialCode = ""
+                                quantity = ""
+                                grossWeight = ""
+                                netWeight = ""
+                                selectedUnit = units.first ?? "pcs" // Reset to default unit
+                                presentationMode.wrappedValue.dismiss()
+                            } else {
+                                // Show error if any field is not valid
+                                // You can implement an alert here if desired
+                            }
                         }) {
-                            Image(systemName: "camera")
-                                .foregroundColor(.blue)
+                            Text("Add")
+                                .frame(maxWidth: .infinity)
                                 .padding()
+                                .background((materialCode.isEmpty ||
+                                            quantity.isEmpty ||
+                                            grossWeight.isEmpty ||
+                                            netWeight.isEmpty ||
+                                            numberFormatter.number(from: quantity) == nil ||
+                                            numberFormatter.number(from: grossWeight) == nil ||
+                                            numberFormatter.number(from: netWeight) == nil) ? Color.gray : Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
                         }
-                        .sheet(isPresented: $isShowingQuantityScanner) {
-                            // Implement your scanner view here
-                            CameraScannerWrapperView(scannedCode: .constant(nil), onCodeScanned: { scannedQuantity in
-                                // Validate that the scanned quantity is numeric
-                                if let _ = numberFormatter.number(from: scannedQuantity) {
-                                    quantity = scannedQuantity
-                                } else {
-                                    // Handle error if quantity is not valid
-                                    // You can implement an alert here if desired
-                                }
-                                isShowingQuantityScanner = false
-                            })
-                        }
+                        .disabled(materialCode.isEmpty ||
+                                  quantity.isEmpty ||
+                                  grossWeight.isEmpty ||
+                                  netWeight.isEmpty ||
+                                  numberFormatter.number(from: quantity) == nil ||
+                                  numberFormatter.number(from: grossWeight) == nil ||
+                                  numberFormatter.number(from: netWeight) == nil)
+                        
+                        Spacer()
                     }
-                    
-                    // Unit of Measurement Picker
-                    Picker("Unit of Measurement", selection: $selectedUnit) {
-                        ForEach(units, id: \.self) { unit in
-                            Text(unit).tag(unit)
-                        }
-                    }
-                    .pickerStyle(MenuPickerStyle())
                     .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
-                    
-                    // Button to add material
-                    Button(action: {
-                        // Add material to the list if quantity is numeric
-                        if let _ = numberFormatter.number(from: quantity), !materialCode.isEmpty {
-                            let newMaterial = Material(code: materialCode, quantity: quantity, unit: selectedUnit)
-                            materials.append(newMaterial)
-                            // Clear fields
-                            materialCode = ""
-                            quantity = ""
-                            selectedUnit = units.first ?? "pcs" // Reset to default unit
-                            presentationMode.wrappedValue.dismiss()
-                        } else {
-                            // Show error if quantity is not valid
-                            // You can implement an alert here if desired
-                        }
-                    }) {
-                        Text("Add")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background((materialCode.isEmpty || quantity.isEmpty || numberFormatter.number(from: quantity) == nil) ? Color.gray : Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                    }
-                    .disabled(materialCode.isEmpty || quantity.isEmpty || numberFormatter.number(from: quantity) == nil)
-                    
-                    Spacer()
                 }
-                .padding()
                 .navigationTitle("Add Material")
                 .navigationBarItems(trailing: Button("Cancel") {
                     presentationMode.wrappedValue.dismiss()
@@ -380,6 +477,9 @@ struct TrackingData2: Codable {
     let container: String?
     let src: String?
     let unit: String?
+    let grossWeight: String? // New field
+    let netWeight: String?   // New field
+    
     enum CodingKeys: String, CodingKey {
         case externalDeliveryID = "EXTERNAL_DELVRY_ID"
         case material = "MATERIAL"
@@ -390,6 +490,8 @@ struct TrackingData2: Codable {
         case container = "CONTAINER"
         case src = "SRC"
         case unit = "UNIT"
+        case grossWeight = "PESO_BRUTO" // New CodingKey
+        case netWeight = "PESO_NETO"     // New CodingKey
     }
 }
 

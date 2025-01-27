@@ -16,7 +16,7 @@ struct ContentView: View {
     @State private var storedTrackingData: [TrackingData] = []
     @State private var uniqueObjectIDCount: Int = 0
     @State private var uniqueObjectIDs: [String] = []
-    @State private var useCustomLabels = false
+    @State private var useCustomLabels = true
     @State private var customLabels = 1
     @State private var objectIDsFromPrint: [String] = []
     @State private var shouldNavigateToExportView = false

@@ -123,7 +123,7 @@ struct ExportView: View {
     // Function to fetch truck data from the API
     func fetchTruckData() {
         isLoading = true
-        let urlString = " "
+        let urlString = "https://ews-emea.api.bosch.com/Api_XDock/api/TrukData"
         //let urlString = "https://run.mocky.io/v3/6b690ebe-892d-4b10-a70e-841c595b8d64"
         guard let url = URL(string: urlString) else {
             showError(message: "Invalid URL.")
