@@ -28,7 +28,7 @@ struct CameraScannerView: UIViewControllerRepresentable {
                 if let bounds = transformedMetadataObject?.bounds, parent.isInScanArea(bounds: bounds) {
                     if let stringValue = readableObject.stringValue {
                         AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
-                        parent.scannedCode = stringValue
+                        parent.scannedCode = stringValue.replacingOccurrences(of: " ", with: "")
 
                         print("Código detectado: \(stringValue). Deteniendo la sesión de captura.")
                         self.captureSession.stopRunning()

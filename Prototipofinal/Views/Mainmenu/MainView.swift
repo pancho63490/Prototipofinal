@@ -24,11 +24,8 @@ struct ContentView: View {
     @State private var shouldNavigateToManualInsertion = false
     @State private var showManualInsertionAlert = false
     @State private var navigateToLogisticsVerificationView = false
-    
-    let shipmentTypes = ["More Information", "Printing", "Verification", "Logis", "Export"]
-    // Ahora no es necesario replicar “TypesOfShimpents” en local
-    // let TypesOfShimpents = ["Inbond","Domestic"]  // Podrías incluso borrarlo si no lo usas
 
+    let shipmentTypes = ["More Information", "Printing", "Verification", "Logis", "Export"]
     let apiService = APIService()
 
     var body: some View {
@@ -68,9 +65,6 @@ struct ContentView: View {
                             .pickerStyle(SegmentedPickerStyle())
                             .padding()
                             
-                            // Aquí ya NO necesitamos assignShipmentType(to:)
-                            // porque todo se maneja desde shipmentState.selectedInboundType
-
                             MaterialListView(trackingData: storedTrackingData)
 
                         } else {
@@ -150,7 +144,7 @@ struct ContentView: View {
                     
                     NavigationLink(
                         destination: PrintView(
-                            referenceNumber: referenceNumber,
+                            referenceNumber: storedTrackingData.first?.externalDeliveryID ?? referenceNumber,
                             trackingData: storedTrackingData,
                             customLabels: customLabels,
                             useCustomLabels: useCustomLabels,
@@ -171,6 +165,7 @@ struct ContentView: View {
                         EmptyView()
                     }
                 }
+                
                 .navigationTitle("Material Import")
                 .padding()
                 // Alerta de error
@@ -188,29 +183,17 @@ struct ContentView: View {
                         secondaryButton: .cancel(Text("Cancel"))
                     )
                 }
-                        
-                // Vista del escáner si está activa
-                if isScanning {
-                    VStack {
-                        CameraScannerView(scannedCode: .constant(nil), onCodeScanned: { code in
-                            referenceNumber = code.trimmingCharacters(in: .whitespacesAndNewlines)
-                            isScanning = false
-                            initiateNewSearch()
-                        })
-                        .edgesIgnoringSafeArea(.all)
-
-                        Button(action: {
-                            isScanning = false
-                        }) {
-                            Text("Cancel")
-                                .padding()
-                                .background(Color.red)
-                                .foregroundColor(.white)
-                                .cornerRadius(10)
-                        }
-                        .padding(.top, 20)
-                    }
+                
+                // Eliminar la superposición actual de CameraScannerWrapperView
+            }
+            // Agregar el modificador .sheet aquí
+            .sheet(isPresented: $isScanning) {
+                CameraScannerWrapperView(scannedCode: .constant(nil)) { code in
+                    referenceNumber = code.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "")
+                    isScanning = false
+                    initiateNewSearch()
                 }
+                .edgesIgnoringSafeArea(.all) // Asegura que la vista ocupe toda la pantalla
             }
             .onTapGesture {
                 hideKeyboard()
@@ -248,9 +231,6 @@ struct ContentView: View {
         }
     }
 
-    // --- Ya no necesitas assignShipmentType(to:) ---
-    // // func assignShipmentType(to type: String?) { ... }
-
     // Función para iniciar una nueva búsqueda, reseteando estados previos
     func initiateNewSearch() {
         referenceNumber = referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -263,8 +243,7 @@ struct ContentView: View {
         self.alertMessage = ""
         self.showManualInsertionAlert = false
 
-        // Reiniciamos la selección global
-        shipmentState.selectedInboundType = nil
+   
 
         // Iniciar nueva búsqueda
         fetchAPIResponse()

@@ -1,88 +1,82 @@
 import SwiftUI
 
 struct MaterialChecklistView: View {
-    // Aquí accedemos al valor global ("Inbond" / "Domestic")
     @EnvironmentObject var shipmentState: ShipmentState
     
-    var trackingData: [TrackingData] // Provided tracking data
-    var objectIDs: [String] // List of object IDs
+    var trackingData: [TrackingData]
+    var objectIDs: [String]
 
-    // States to manage materials and locations
     @State private var materialsPerObjectID: [String: [MaterialEntry]] = [:]
     @State private var locationsPerObjectID: [String: String] = [:]
-
-    // States to manage remaining and total quantities of each material
     @State private var remainingQuantities: [String: Int] = [:]
-    @State private var totalQuantities: [String: Int] = [:] // Added to track total quantities
+    @State private var totalQuantities: [String: Int] = [:]
 
-    // States to control the presentation of sheets and alerts
-    @State private var showingAddMaterialSheet = false
     @State private var selectedObjectID: String?
+    @State private var scannedObjectIDs: Set<String> = []
+    
     @State private var newMaterial = ""
     @State private var newQuantityText = ""
+    @State private var newLocation = ""
+    @State private var newGeneralLocation = ""
 
-    // State variables for alerts
+    @State private var showingAddMaterialSheet = false
+    @State private var showingAssignLocationSheet = false
+    @State private var showingAssignGeneralLocationSheet = false
+    @State private var showingObjectIDScanner = false
+    @State private var showingMaterialScanner = false
+    @State private var showingQuantityScanner = false
+
     enum ActiveAlert: Identifiable {
         case error
         case success
         case missingQuantities
+        case confirm
 
         var id: Int {
-            hashValue
+            self.hashValue
         }
     }
     @State private var activeAlert: ActiveAlert?
     @State private var errorMessage: String = ""
     @State private var missingMaterials: [(material: String, quantity: Int)] = []
 
-    // States for location assignment
-    @State private var showingAssignLocationSheet = false
-    @State private var newLocation = ""
-
-    // State for general location assignment
-    @State private var showingAssignGeneralLocationSheet = false
-    @State private var newGeneralLocation = ""
-
-    // States for scanning
-    @State private var showingMaterialScanner = false
-    @State private var showingQuantityScanner = false
-
-    // State for object ID scanning
-    @State private var scannedObjectIDs: Set<String> = []
-    @State private var showingObjectIDScanner = false
-
-    // State to manage expandable/collapsible object IDs
-    @State private var expandedObjectIDs: [String: Bool] = [:]
-
-    // Environment variable to handle view dismissal
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            
-            // Ejemplo de uso de la variable global
-            Text("Type of Shipment \(shipmentState.selectedInboundType ?? "N/A")")
-                .font(.headline)
-                .padding()
-
-            // Resto de la vista...
-            List {
-                ForEach(objectIDs, id: \.self) { objectID in
-                    DisclosureGroup(
-                        isExpanded: Binding<Bool>(
-                            get: { expandedObjectIDs[objectID, default: false] },
-                            set: { expandedObjectIDs[objectID] = $0 }
-                        )
-                    ) {
+        NavigationView {
+            Form {
+                // SECTION: Shipment Type Information
+                Section(header: Text("Shipment Information")) {
+                    Text("Shipment Type: \(shipmentState.selectedInboundType ?? "N/A")")
+                        .font(.headline)
+                }
+                
+                // SECTION: Picker to select Object ID
+                Section(header: Text("Select an Object ID")) {
+                    Picker("Object ID", selection: $selectedObjectID) {
+                        Text("Choose...").tag(String?.none)
+                        ForEach(objectIDs, id: \.self) { objectID in
+                            Text(objectID).tag(Optional(objectID))
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                }
+                
+                // SECTION: Details of the selected Object ID
+                if let objectID = selectedObjectID {
+                    Section(header: Text("Details of \(objectID)")) {
+                        
+                        // Scan Object ID if it has not been scanned
                         if !scannedObjectIDs.contains(objectID) {
-                            Button(action: {
-                                selectedObjectID = objectID
+                            Button {
                                 showingObjectIDScanner = true
-                            }) {
-                                Text("Scan Object ID")
+                            } label: {
+                                Label("Scan Object ID", systemImage: "qrcode.viewfinder")
                                     .foregroundColor(.orange)
                             }
+                            
                         } else {
+                            // Show assigned location or button to assign it
                             if let location = locationsPerObjectID[objectID] {
                                 HStack {
                                     Text("Assigned Location:")
@@ -91,103 +85,115 @@ struct MaterialChecklistView: View {
                                         .fontWeight(.bold)
                                 }
                             }
-
-                            Button(action: {
-                                selectedObjectID = objectID
+                            
+                            Button {
                                 showingAssignLocationSheet = true
-                            }) {
-                                Text(locationsPerObjectID[objectID] != nil ? "Change Location" : "Assign Location")
-                                    .foregroundColor(.green)
+                            } label: {
+                                Label(
+                                    locationsPerObjectID[objectID] != nil
+                                    ? "Change Location"
+                                    : "Assign Location",
+                                    systemImage: "map"
+                                )
+                                .foregroundColor(.green)
                             }
-                            .padding(.vertical, 5)
 
+                            // List of materials added to this Object ID
                             if let materials = materialsPerObjectID[objectID] {
-                                ForEach(materials) { entry in
-                                    HStack {
-                                        Text("Material: \(entry.material)")
-                                        Spacer()
-                                        Text("Quantity: \(entry.quantity)")
+                                // To prevent breaking the Form structure, use a ScrollView or a sub-Form instead of List
+                                ScrollView {
+                                    VStack(spacing: 10) {
+                                        ForEach(materials) { entry in
+                                            HStack {
+                                                VStack(alignment: .leading) {
+                                                    Text("Material: \(entry.material)")
+                                                        .font(.subheadline)
+                                                    Text("Quantity: \(entry.quantity)")
+                                                        .font(.footnote)
+                                                }
+                                                Spacer()
+                                                // Button to delete a specific material (if you want to allow it individually)
+                                                Button(role: .destructive) {
+                                                    // Remove this entry
+                                                    deleteMaterial(entry, for: objectID)
+                                                } label: {
+                                                    Image(systemName: "trash")
+                                                }
+                                            }
+                                            Divider()
+                                        }
                                     }
+                                    .padding(.vertical, 5)
                                 }
-                                .onDelete { indices in
-                                    deleteMaterials(at: indices, for: objectID)
-                                }
+                                .frame(minHeight: 100, maxHeight: 200)
                             }
-
-                            Button(action: {
-                                selectedObjectID = objectID
+                            
+                            // Botón para agregar nuevo material
+                            Button {
                                 showingAddMaterialSheet = true
-                            }) {
-                                Text("Add Material")
+                            } label: {
+                                Label("Add Material", systemImage: "plus")
                                     .foregroundColor(.blue)
                             }
-                            .padding(.vertical, 5)
-                            .disabled(!scannedObjectIDs.contains(objectID))
+                            .disabled(!scannedObjectIDs.contains(objectID) || trackingDataMaterials().isEmpty) // Deshabilitar si no hay materiales disponibles
                         }
+                    }
+                }
+                
+                // SECTION: Assign location to ALL
+                Section {
+                    Button {
+                        showingAssignGeneralLocationSheet = true
                     } label: {
-                        Text("Object ID: \(objectID)")
-                            .font(.headline)
+                        Label("Assign Location to All", systemImage: "location.fill")
+                            .foregroundColor(.purple)
                     }
                 }
-            }
-            .listStyle(GroupedListStyle())
-            .padding(.bottom)
 
-            Button(action: {
-                showingAssignGeneralLocationSheet = true
-            }) {
-                Text("Assign Location to All")
-                    .foregroundColor(.purple)
-            }
-            .padding()
-
-            VStack(alignment: .leading) {
-                Text("Remaining Quantities:")
-                    .font(.headline)
-                    .padding(.leading)
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 15) {
-                        ForEach(remainingQuantities.keys.filter { remainingQuantities[$0]! > 0 }.sorted(), id: \.self) { material in
-                            VStack {
-                                Text(material)
-                                    .font(.subheadline)
-                                    .fontWeight(.bold)
-                                Text("Remaining: \(remainingQuantities[material]!)")
-                                    .font(.subheadline)
+                // SECTION: Remaining Quantities
+                Section(header: Text("Remaining Quantities")) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 15) {
+                            ForEach(remainingQuantities.keys.filter { remainingQuantities[$0]! > 0 }.sorted(), id: \.self) { material in
+                                VStack {
+                                    Text(material)
+                                        .font(.subheadline)
+                                        .fontWeight(.bold)
+                                    Text("Missing: \(remainingQuantities[material]!)")
+                                        .font(.subheadline)
+                                }
+                                .padding()
+                                .background(Color(.systemGray6))
+                                .cornerRadius(8)
                             }
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .cornerRadius(8)
                         }
+                        .padding(.vertical, 5)
                     }
-                    .padding(.horizontal)
                 }
-                .padding(.vertical, 5)
             }
-
-            Spacer()
-
-            Button(action: {
-                checkForMissingQuantitiesAndSendData()
-            }) {
-                Text("Send")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+            .navigationTitle("Packing List Checklist")
+            .toolbar {
+                // Submit Button at the top right
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        activeAlert = .confirm  // Establece el tipo de alerta a mostrar
+                    } label: {
+                        Text("Send")
+                            .padding()  // Añade espacio alrededor del texto
+                            .background(Color.blue)  // Fondo azul
+                            .foregroundColor(.white)  // Texto blanco
+                            .cornerRadius(8)  // Bordes redondeados
+                    }
+                }
             }
-            .padding(.horizontal)
         }
-        .navigationTitle("Packing List Checklist")
+        // onAppear to initialize quantities
         .onAppear {
             initializeRemainingQuantities()
-            for objectID in objectIDs {
-                expandedObjectIDs[objectID] = true
-            }
         }
-        // Assign Location Sheet
+        // MARK: - Sheets and Alerts
+
+        // Sheet: Assign location to a specific Object ID
         .sheet(isPresented: $showingAssignLocationSheet) {
             let optionalNewLocation = Binding<String?>(
                 get: { self.newLocation },
@@ -199,89 +205,42 @@ struct MaterialChecklistView: View {
                 showingAssignLocationSheet = false
             }
         }
-        // Add Material Sheet
+        // Sheet: Add material
         .sheet(isPresented: $showingAddMaterialSheet) {
-            VStack {
-                Text("Add Material")
-                    .font(.headline)
-                    .padding()
-
-                HStack {
-                    TextField("Material", text: $newMaterial)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                    Button(action: {
-                        showingMaterialScanner = true
-                    }) {
-                        Image(systemName: "camera")
-                            .foregroundColor(.blue)
-                            .padding()
-                    }
-                }
-                .padding()
-
-                List {
-                    ForEach(trackingDataMaterials(), id: \.self) { material in
-                        Button(action: {
-                            newMaterial = material
-                        }) {
-                            Text(material)
-                        }
-                    }
-                }
-                .frame(maxHeight: 150)
-
-                HStack {
-                    TextField("Quantity", text: $newQuantityText)
-                        .keyboardType(.numberPad)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                    Button(action: {
-                        showingQuantityScanner = true
-                    }) {
-                        Image(systemName: "camera")
-                            .foregroundColor(.blue)
-                            .padding()
-                    }
-                }
-                .padding()
-
-                HStack {
-                    Button("Cancel") {
-                        showingAddMaterialSheet = false
-                        newMaterial = ""
-                        newQuantityText = ""
-                    }
-                    .padding()
-                    Spacer()
-                    Button("Add") {
-                        addMaterial()
-                        showingAddMaterialSheet = false
-                    }
-                    .padding()
-                }
-            }
-            .padding()
-            // Present scanner sheets
-            .sheet(isPresented: $showingMaterialScanner) {
-                let optionalNewMaterial = Binding<String?>(
-                    get: { self.newMaterial },
-                    set: { self.newMaterial = $0 ?? "" }
-                )
-                CameraScannerWrapperView(scannedCode: optionalNewMaterial) { code in
-                    newMaterial = code
-                    showingMaterialScanner = false
-                }
-            }
-            .sheet(isPresented: $showingQuantityScanner) {
-                let optionalNewQuantityText = Binding<String?>(
-                    get: { self.newQuantityText },
-                    set: { self.newQuantityText = $0 ?? "" }
-                )
-                CameraScannerWrapperView(scannedCode: optionalNewQuantityText) { code in
-                    newQuantityText = code
-                    showingQuantityScanner = false
-                }
+            addMaterialSheetView
+        }
+        // Sheet: Assign location to ALL Object IDs
+        .sheet(isPresented: $showingAssignGeneralLocationSheet) {
+            let optionalNewGeneralLocation = Binding<String?>(
+                get: { self.newGeneralLocation },
+                set: { self.newGeneralLocation = $0 ?? "" }
+            )
+            CameraScannerWrapperView(scannedCode: optionalNewGeneralLocation) { code in
+                newGeneralLocation = code
+                assignGeneralLocation()
+                showingAssignGeneralLocationSheet = false
             }
         }
+        // Sheet: Scan Object ID
+        .sheet(isPresented: $showingObjectIDScanner) {
+            let scannedCodeBinding = Binding<String?>(
+                get: { "" },
+                set: { _ in }
+            )
+            CameraScannerWrapperView(scannedCode: scannedCodeBinding) { code in
+                if let current = selectedObjectID {
+                    if code == current {
+                        scannedObjectIDs.insert(current)
+                    } else {
+                        showError(message: "The scanned code does not match \(current).")
+                    }
+                } else {
+                    showError(message: "No Object ID has been selected.")
+                }
+                showingObjectIDScanner = false
+            }
+        }
+        // Alerts
         .alert(item: $activeAlert) { alert in
             switch alert {
             case .error:
@@ -308,43 +267,113 @@ struct MaterialChecklistView: View {
                     },
                     secondaryButton: .cancel(Text("Cancel"))
                 )
-            }
-        }
-        // General Assign Location Sheet
-        .sheet(isPresented: $showingAssignGeneralLocationSheet) {
-            let optionalNewGeneralLocation = Binding<String?>(
-                get: { self.newGeneralLocation },
-                set: { self.newGeneralLocation = $0 ?? "" }
-            )
-            CameraScannerWrapperView(scannedCode: optionalNewGeneralLocation) { code in
-                newGeneralLocation = code
-                assignGeneralLocation()
-                showingAssignGeneralLocationSheet = false
-            }
-        }
-        // Object ID Scanner Sheet
-        .sheet(isPresented: $showingObjectIDScanner) {
-            let scannedCodeBinding = Binding<String?>(
-                get: { "" },
-                set: { _ in }
-            )
-            CameraScannerWrapperView(scannedCode: scannedCodeBinding) { code in
-                if code == selectedObjectID {
-                    if let validCode = selectedObjectID {
-                        scannedObjectIDs.insert(validCode)
-                    } else {
-                        showError(message: "Selected Object ID is nil.")
-                    }
-                } else {
-                    showError(message: "Scanned code does not match Object ID.")
-                }
-                showingObjectIDScanner = false
+            case .confirm:
+                return Alert(
+                    title: Text("Are you sure?"),
+                    message: Text("Are you sure you want to send this data?"),
+                    primaryButton: .destructive(Text("Send")) {
+                        checkForMissingQuantitiesAndSendData()
+                    },
+                    secondaryButton: .cancel()
+                )
             }
         }
     }
 
-    // Funciones internas (sin cambios sustanciales):
-    func initializeRemainingQuantities() {
+    // MARK: - Subview to add material
+    private var addMaterialSheetView: some View {
+        VStack {
+            Text("Add Material")
+                .font(.headline)
+                .padding()
+
+            // Text field + scanner button for Material
+            HStack {
+                TextField("Material", text: $newMaterial)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                Button(action: {
+                    showingMaterialScanner = true
+                }) {
+                    Image(systemName: "camera")
+                        .foregroundColor(.blue)
+                        .padding()
+                }
+            }
+            .padding()
+
+            // Lista de sugerencias de materiales (trackingData) filtrados
+            List {
+                ForEach(trackingDataMaterials(), id: \.self) { material in
+                    Button {
+                        newMaterial = material
+                    } label: {
+                        Text(material)
+                    }
+                }
+            }
+            .frame(maxHeight: 150)
+
+            // Text field + scanner button for Quantity
+            HStack {
+                TextField("Quantity", text: $newQuantityText)
+                    .keyboardType(.numberPad)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                Button(action: {
+                    showingQuantityScanner = true
+                }) {
+                    Image(systemName: "camera")
+                        .foregroundColor(.blue)
+                        .padding()
+                }
+            }
+            .padding()
+
+            HStack {
+                Button("Cancel") {
+                    showingAddMaterialSheet = false
+                    newMaterial = ""
+                    newQuantityText = ""
+                }
+                .padding()
+
+                Spacer()
+
+                Button("Add") {
+                    addMaterial()
+                    showingAddMaterialSheet = false
+                }
+                .padding()
+                .disabled(newMaterial.isEmpty || newQuantityText.isEmpty) // Deshabilitar si los campos están vacíos
+            }
+        }
+        .padding()
+        // Sheets to scan Material or Quantity
+        .sheet(isPresented: $showingMaterialScanner) {
+            let optionalNewMaterial = Binding<String?>(
+                get: { self.newMaterial },
+                set: { self.newMaterial = $0 ?? "" }
+            )
+            CameraScannerWrapperView(scannedCode: optionalNewMaterial) { code in
+                newMaterial = code
+                showingMaterialScanner = false
+            }
+        }
+        .sheet(isPresented: $showingQuantityScanner) {
+            let optionalNewQuantityText = Binding<String?>(
+                get: { self.newQuantityText },
+                set: { self.newQuantityText = $0 ?? "" }
+            )
+            CameraScannerWrapperView(scannedCode: optionalNewQuantityText) { code in
+                newQuantityText = code
+                showingQuantityScanner = false
+            }
+        }
+    }
+
+    // MARK: - Logic Functions
+
+    /// Initializes remaining and total quantities based on trackingData
+    private func initializeRemainingQuantities() {
         let grouped = Dictionary(grouping: trackingData, by: { $0.material })
         for (material, entries) in grouped {
             let totalQuantity = entries.reduce(0) { (result, data) -> Int in
@@ -356,18 +385,20 @@ struct MaterialChecklistView: View {
         }
     }
 
-    func trackingDataMaterials() -> [String] {
+    private func trackingDataMaterials() -> [String] {
         let materials = trackingData.map { $0.material }
-        return Array(Set(materials)).sorted()
+        return Array(Set(materials))
+            .filter { remainingQuantities[$0, default: 0] > 0 } // Filtrar materiales completados
+            .sorted()
     }
-
-    func addMaterial() {
+ 
+    private func addMaterial() {
         guard let objectID = selectedObjectID else { return }
         let material = newMaterial.trimmingCharacters(in: .whitespacesAndNewlines)
         let quantityStr = newQuantityText.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if material.isEmpty || quantityStr.isEmpty {
-            showError(message: "Please fill in all fields.")
+            showError(message: "All fields are required.")
             return
         }
 
@@ -388,27 +419,23 @@ struct MaterialChecklistView: View {
         newQuantityText = ""
     }
 
-    func deleteMaterials(at offsets: IndexSet, for objectID: String) {
-        if var materials = materialsPerObjectID[objectID] {
-            for index in offsets {
-                let entry = materials[index]
-                if let remaining = remainingQuantities[entry.material] {
-                    remainingQuantities[entry.material] = remaining + entry.quantity
-                } else {
-                    remainingQuantities[entry.material] = entry.quantity
-                }
-            }
-            materials.remove(atOffsets: offsets)
+    /// Deletes a single material entry
+    private func deleteMaterial(_ entry: MaterialEntry, for objectID: String) {
+        if var materials = materialsPerObjectID[objectID],
+           let index = materials.firstIndex(where: { $0.id == entry.id }) {
+            // Return the deleted quantity to inventory
+            remainingQuantities[entry.material, default: 0] += entry.quantity
+            materials.remove(at: index)
             materialsPerObjectID[objectID] = materials
         }
     }
-
-    func assignLocation() {
+    /// Assigns location to the selected Object ID
+    private func assignLocation() {
         guard let objectID = selectedObjectID else { return }
         let location = newLocation.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if location.isEmpty {
-            showError(message: "Please enter a location.")
+            showError(message: "You must enter a valid location.")
             return
         }
 
@@ -422,11 +449,11 @@ struct MaterialChecklistView: View {
         newLocation = ""
     }
 
-    func assignGeneralLocation() {
+    /// Assigns the same location to all Object IDs
+    private func assignGeneralLocation() {
         let location = newGeneralLocation.trimmingCharacters(in: .whitespacesAndNewlines)
-
         if location.isEmpty {
-            showError(message: "Please enter a location.")
+            showError(message: "You must enter a valid location.")
             return
         }
 
@@ -442,12 +469,8 @@ struct MaterialChecklistView: View {
         newGeneralLocation = ""
     }
 
-    func showError(message: String) {
-        errorMessage = message
-        activeAlert = .error
-    }
-
-    func checkForMissingQuantitiesAndSendData() {
+    /// Checks for pending materials and generates an alert if necessary
+    private func checkForMissingQuantitiesAndSendData() {
         var missingMaterialsDict: [String: Int] = [:]
         for (material, remaining) in remainingQuantities {
             if remaining > 0 {
@@ -463,25 +486,27 @@ struct MaterialChecklistView: View {
         }
     }
 
-    func missingMaterialsMessage() -> String {
-        var message = "The following quantities are missing:\n"
+    /// Builds the message for the missing materials alert
+    private func missingMaterialsMessage() -> String {
+        var message = "The following materials are missing:\n"
         for (material, quantity) in missingMaterials {
             message += "- \(material): \(quantity)\n"
         }
-        message += "\nDo you want to continue?"
+        message += "\nDo you want to continue anyway?"
         return message
     }
 
-    func sendData() {
+    /// Sends the final data to the endpoint
+    private func sendData() {
         var groupedMaterials: [MaterialKey: MaterialData] = [:]
         var addedQuantities: [String: Int] = [:]
 
+        // Iterate through each Object ID to group the info
         for objectID in objectIDs {
             guard let location = locationsPerObjectID[objectID] else {
-                showError(message: "Missing location for Object ID \(objectID).")
+                showError(message: "Location is missing for Object ID \(objectID).")
                 return
             }
-
             guard let materials = materialsPerObjectID[objectID], !materials.isEmpty else {
                 showError(message: "No materials have been added for Object ID \(objectID).")
                 return
@@ -489,7 +514,6 @@ struct MaterialChecklistView: View {
 
             for entry in materials {
                 let key = MaterialKey(objectID: objectID, material: entry.material, location: location)
-
                 if let existingData = groupedMaterials[key] {
                     var updatedData = existingData
                     updatedData.QUANTITY += entry.quantity
@@ -508,11 +532,11 @@ struct MaterialChecklistView: View {
                             UNIT: trackingEntry.unit,
                             Peso_neto: trackingEntry.pesoNeto,
                             Peso_bruto: trackingEntry.pesoBruto,
-                            TYPE_SHIPMENT: shipmentState.selectedInboundType ?? "Uknown"
+                            TYPE_SHIPMENT: shipmentState.selectedInboundType ?? "Unknown"
                         )
                         groupedMaterials[key] = materialData
                     } else {
-                        showError(message: "No tracking information found for material \(entry.material).")
+                        showError(message: "Tracking information not found for \(entry.material).")
                         return
                     }
                 }
@@ -520,6 +544,7 @@ struct MaterialChecklistView: View {
             }
         }
 
+        // Adjust the BILL property based on missing quantities
         for (material, totalQty) in totalQuantities {
             let addedQty = addedQuantities[material] ?? 0
             let isMissingQuantity = addedQty < totalQty
@@ -529,10 +554,11 @@ struct MaterialChecklistView: View {
                 groupedMaterials[key] = materialData
             }
 
+            // If a material was not added at all but exists in trackingData, add it with QUANTITY = 0
             if isMissingQuantity && addedQty == 0 {
                 for objectID in objectIDs {
                     guard let location = locationsPerObjectID[objectID] else {
-                        showError(message: "Missing location for Object ID \(objectID).")
+                        showError(message: "Location is missing for \(objectID).")
                         return
                     }
                     let key = MaterialKey(objectID: objectID, material: material, location: location)
@@ -550,7 +576,7 @@ struct MaterialChecklistView: View {
                                 UNIT: trackingEntry.unit,
                                 Peso_neto: trackingEntry.pesoNeto,
                                 Peso_bruto: trackingEntry.pesoBruto,
-                                TYPE_SHIPMENT: shipmentState.selectedInboundType ?? "Uknown"
+                                TYPE_SHIPMENT: shipmentState.selectedInboundType ?? "Unknown"
                             )
                             groupedMaterials[key] = materialData
                         }
@@ -559,18 +585,20 @@ struct MaterialChecklistView: View {
             }
         }
 
-        let jsonDataArray = Array(groupedMaterials.values)
-        sendJSONData(jsonDataArray)
+        let finalData = Array(groupedMaterials.values)
+        sendJSONData(finalData)
     }
 
-    func sendJSONData(_ data: [MaterialData]) {
+    /// Sends the JSON to the server
+    private func sendJSONData(_ data: [MaterialData]) {
         guard let jsonData = try? JSONEncoder().encode(data) else {
             showError(message: "Error encoding data to JSON.")
             return
         }
 
+        // Debug print
         if let jsonString = String(data: jsonData, encoding: .utf8) {
-            print("JSON Data being sent:\n\(jsonString)")
+            print("JSON to be sent:\n\(jsonString)")
         }
 
         let urlString = "https://ews-emea.api.bosch.com/Api_XDock/api/Update"
@@ -585,11 +613,12 @@ struct MaterialChecklistView: View {
         request.httpBody = jsonData
 
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            // For logging
             if let httpResponse = response as? HTTPURLResponse {
-                print("API Response Status Code: \(httpResponse.statusCode)")
+                print("Response Code: \(httpResponse.statusCode)")
             }
             if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                print("API Response Body:\n\(responseString)")
+                print("Server Response:\n\(responseString)")
             }
 
             if let error = error {
@@ -605,33 +634,42 @@ struct MaterialChecklistView: View {
                 }
             } else {
                 DispatchQueue.main.async {
-                    self.showError(message: "Error in server response.")
+                    self.showError(message: "Server response error.")
                 }
             }
         }
         task.resume()
     }
 
-    func showSuccess() {
+    /// Shows the success alert
+    private func showSuccess() {
         activeAlert = .success
     }
 
-    func resetData() {
+    /// Shows a generic error message
+    private func showError(message: String) {
+        errorMessage = message
+        activeAlert = .error
+    }
+
+    /// Resets all local information
+    private func resetData() {
         materialsPerObjectID.removeAll()
         locationsPerObjectID.removeAll()
         remainingQuantities.removeAll()
         totalQuantities.removeAll()
         scannedObjectIDs.removeAll()
-        expandedObjectIDs.removeAll()
         newMaterial = ""
         newQuantityText = ""
         newLocation = ""
         newGeneralLocation = ""
         missingMaterials.removeAll()
+        selectedObjectID = nil
     }
 }
 
-// MARK: - MaterialEntry, MaterialKey, MaterialData
+// MARK: - Supporting Structures
+
 struct MaterialEntry: Identifiable {
     let id: UUID
     let material: String
@@ -655,7 +693,7 @@ struct MaterialData: Codable {
     let DELIVERY_TYPE: String?
     var BILL: String
     var UNIT: String
-    let Peso_neto : Decimal?
-    let Peso_bruto : Decimal?
+    let Peso_neto: Decimal?
+    let Peso_bruto: Decimal?
     let TYPE_SHIPMENT: String?
 }

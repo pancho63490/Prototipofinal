@@ -9,6 +9,11 @@ struct ExportView: View {
     @State private var currentObjectID: String? // ObjectID being scanned
     @State private var isScanning = false // Active scanning control
     @State private var expandedTrucks: Set<UUID> = [] // Tracks expanded trucks
+    @State private var searchText: String = "" // Search text for filtering trucks
+    
+    // Variables para la alerta final de exportación:
+    @State private var showCompletionAlert = false
+    @State private var completionMessage = ""
 
     var body: some View {
         NavigationView {
@@ -17,7 +22,7 @@ struct ExportView: View {
                     if isLoading {
                         ProgressView("Loading data...")
                     } else {
-                        List(truckData, id: \.id) { truck in
+                        List(filteredTruckData, id: \.id) { truck in
                             DisclosureGroup(
                                 isExpanded: Binding(
                                     get: { expandedTrucks.contains(truck.id) },
@@ -35,6 +40,9 @@ struct ExportView: View {
                                         VStack(alignment: .leading) {
                                             Text("Object ID: \(item.objectID)")
                                                 .font(.subheadline)
+                                            Text("Reference: \(item.TrackingNumber)")
+                                                .font(.caption)
+                                                .foregroundColor(.gray)
                                             Text("Location: \(item.location)")
                                                 .font(.caption)
                                                 .foregroundColor(.gray)
@@ -69,16 +77,24 @@ struct ExportView: View {
                                     .padding(.top, 10)
                                 }
                             } label: {
-                                HStack {
-                                    Text("Truck: \(truck.deliveryType)")
-                                        .font(.headline)
-                                    Spacer()
-                                    Image(systemName: expandedTrucks.contains(truck.id) ? "chevron.up" : "chevron.down")
-                                        .foregroundColor(.gray)
+                                VStack(alignment: .leading) {
+                                    HStack {
+                                        Text("Truck: \(truck.deliveryType)")
+                                            .font(.headline)
+                                        Spacer()
+                                        Image(systemName: expandedTrucks.contains(truck.id) ? "chevron.up" : "chevron.down")
+                                            .foregroundColor(.gray)
+                                    }
+                                    // Barra de progreso
+                                    ProgressView(value: progress(for: truck))
+                                        .progressViewStyle(LinearProgressViewStyle(tint: .blue))
+                                        .scaleEffect(x: 1, y: 2, anchor: .center)
+                                        .padding(.top, 4)
                                 }
                             }
                         }
-                        .listStyle(InsetGroupedListStyle()) // Improved list style for better appearance
+                        .listStyle(InsetGroupedListStyle())
+                        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search trucks")
                     }
                     Spacer()
                 }
@@ -86,6 +102,14 @@ struct ExportView: View {
                 .navigationTitle("Export")
                 .alert(isPresented: $showErrorAlert) {
                     Alert(title: Text("Error"), message: Text(errorMessage), dismissButton: .default(Text("OK")))
+                }
+                // Alerta final para el estado de la exportación
+                .alert(isPresented: $showCompletionAlert) {
+                    Alert(
+                        title: Text("Export Result"),
+                        message: Text(completionMessage),
+                        dismissButton: .default(Text("OK"))
+                    )
                 }
                 
                 if isScanning {
@@ -120,11 +144,26 @@ struct ExportView: View {
         }
     }
 
+    // Computed property to filter trucks based on search text
+    var filteredTruckData: [Truck] {
+        if searchText.isEmpty {
+            return truckData
+        } else {
+            return truckData.filter { $0.deliveryType.localizedCaseInsensitiveContains(searchText) }
+        }
+    }
+
+    // Function to calculate progress for a truck
+    func progress(for truck: Truck) -> Double {
+        let scannedCount = truck.items.filter { scannedObjectIDs.contains($0.objectID) }.count
+        return Double(scannedCount) / Double(truck.items.count)
+    }
+
     // Function to fetch truck data from the API
     func fetchTruckData() {
         isLoading = true
+        //let urlString = "https://run.mocky.io/v3/e54e46e5-6e26-437f-a830-f0814ee77f93"
         let urlString = "https://ews-emea.api.bosch.com/Api_XDock/api/TrukData"
-        //let urlString = "https://run.mocky.io/v3/6b690ebe-892d-4b10-a70e-841c595b8d64"
         guard let url = URL(string: urlString) else {
             showError(message: "Invalid URL.")
             return
@@ -133,7 +172,6 @@ struct ExportView: View {
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             DispatchQueue.main.async {
                 isLoading = false
-
                 if let error = error {
                     showError(message: "Error fetching data: \(error.localizedDescription)")
                     return
@@ -165,7 +203,6 @@ struct ExportView: View {
             return
         }
 
-        // Print both values to the console for comparison
         print("Scanned code: '\(code)'")
         print("Expected ObjectID: '\(objectID)'")
 
@@ -183,12 +220,43 @@ struct ExportView: View {
         truck.items.allSatisfy { scannedObjectIDs.contains($0.objectID) }
     }
 
-    // Mark the truck as completed by sending a PUT request
+    // Marca como completado, enviando *uno por uno* los TrackingNumber de cada Item
     func markTruckAsCompleted(_ truck: Truck) {
+        // Usamos DispatchGroup para saber cuándo terminaron todas las solicitudes
+        let dispatchGroup = DispatchGroup()
+        var failedItems: [String] = []
+
+        for item in truck.items {
+            dispatchGroup.enter()
+            sendTrackingRequest(for: item) { success in
+                if !success {
+                    failedItems.append(item.TrackingNumber)
+                }
+                dispatchGroup.leave()
+            }
+        }
+
+        // Cuando todas las solicitudes terminan, se llama a notify
+        dispatchGroup.notify(queue: .main) {
+            if failedItems.isEmpty {
+                completionMessage = "All items exported successfully."
+                // Si todo fue exitoso, recargamos la data
+                fetchTruckData()
+            } else {
+                completionMessage = "Some items could not be exported: \(failedItems.joined(separator: ", "))"
+            }
+            showCompletionAlert = true
+        }
+    }
+
+    // Envía una solicitud PUT por cada TrackingNumber; incluye un callback de éxito/fallo
+    // Envía una solicitud PUT por cada TrackingNumber; incluye un callback de éxito/fallo
+    func sendTrackingRequest(for item: Item, completion: @escaping (Bool) -> Void) {
         let urlString = "https://ews-emea.api.bosch.com/Api_XDock/api/TrukData/UpdateBill"
 
         guard let url = URL(string: urlString) else {
-            showError(message: "Invalid URL.")
+            print("Invalid URL.")
+            completion(false)
             return
         }
 
@@ -197,41 +265,47 @@ struct ExportView: View {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        // Request body with the correct format
         let body: [String: Any] = [
-            "DeliveryType": truck.deliveryType
+            "DeliveryType": item.TrackingNumber
         ]
 
+        // Imprime en consola el debug de lo que se envía
+        print("DEBUG: Enviando solicitud PUT a \(urlString) con el siguiente cuerpo:")
+        print(body)
+        
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: body, options: [])
             request.httpBody = jsonData
         } catch {
-            showError(message: "Error encoding data: \(error.localizedDescription)")
+            print("Error encoding data: \(error.localizedDescription)")
+            completion(false)
             return
         }
 
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    showError(message: "Error sending data: \(error.localizedDescription)")
+                    print("Error sending data for TrackingNumber \(item.TrackingNumber): \(error.localizedDescription)")
+                    completion(false)
                     return
                 }
 
                 guard let httpResponse = response as? HTTPURLResponse else {
-                    showError(message: "Invalid server response.")
+                    print("Invalid server response for TrackingNumber \(item.TrackingNumber).")
+                    completion(false)
                     return
                 }
 
                 if httpResponse.statusCode == 200 {
-                    print("Data sent successfully. Truck: \(truck.deliveryType)")
-                    fetchTruckData() // Reload data after success
+                    print("Successfully sent data for TrackingNumber: \(item.TrackingNumber)")
+                    completion(true)
                 } else {
                     if let data = data, let responseBody = String(data: data, encoding: .utf8) {
-                        print("Server response error: \(responseBody)")
-                        showError(message: "Server error: \(responseBody)")
+                        print("Server error for TrackingNumber \(item.TrackingNumber): \(responseBody)")
                     } else {
-                        showError(message: "Unknown server error.")
+                        print("Unknown server error for TrackingNumber \(item.TrackingNumber).")
                     }
+                    completion(false)
                 }
             }
         }
@@ -252,7 +326,7 @@ struct Truck: Codable, Identifiable {
     let items: [Item]
 
     enum CodingKeys: String, CodingKey {
-        case deliveryType = "DeliveryType"
+        case deliveryType = "TruckBox"
         case items = "Items"
     }
 }
@@ -262,10 +336,11 @@ struct Item: Codable, Identifiable {
     let id = UUID()
     let objectID: String
     let location: String
+    let TrackingNumber: String
 
     enum CodingKeys: String, CodingKey {
         case objectID = "ObjectID"
         case location = "Location"
+        case TrackingNumber = "TrackingNumber"
     }
 }
-
