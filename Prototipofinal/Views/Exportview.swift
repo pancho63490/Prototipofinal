@@ -1,15 +1,24 @@
 import SwiftUI
 
+// MARK: - Extension para filtrar elementos únicos en un Array
+extension Array {
+    func uniqued<T: Hashable>(by keySelector: (Element) -> T) -> [Element] {
+        var seen = Set<T>()
+        return self.filter { seen.insert(keySelector($0)).inserted }
+    }
+}
+
+// MARK: - Vista principal
 struct ExportView: View {
-    @State private var truckData: [Truck] = [] // Truck data
-    @State private var scannedObjectIDs: Set<String> = [] // Record of scanned ObjectIDs
-    @State private var isLoading = false // Loading indicator
+    @State private var truckData: [Truck] = [] // Datos de camiones
+    @State private var scannedObjectIDs: Set<String> = [] // Registra los ObjectIDs escaneados
+    @State private var isLoading = false // Indicador de carga
     @State private var showErrorAlert = false
     @State private var errorMessage = ""
-    @State private var currentObjectID: String? // ObjectID being scanned
-    @State private var isScanning = false // Active scanning control
-    @State private var expandedTrucks: Set<UUID> = [] // Tracks expanded trucks
-    @State private var searchText: String = "" // Search text for filtering trucks
+    @State private var currentObjectID: String? // ObjectID que se está escaneando
+    @State private var isScanning = false // Control de activación del escaneo
+    @State private var expandedTrucks: Set<UUID> = [] // Controla los camiones expandidos
+    @State private var searchText: String = "" // Texto de búsqueda para filtrar camiones
     
     // Variables para la alerta final de exportación:
     @State private var showCompletionAlert = false
@@ -35,7 +44,8 @@ struct ExportView: View {
                                     }
                                 )
                             ) {
-                                ForEach(truck.items) { item in
+                                // Usamos la extensión "uniqued" para mostrar cada ObjectID una sola vez en la lista
+                                ForEach(truck.items.uniqued(by: { $0.objectID })) { item in
                                     HStack {
                                         VStack(alignment: .leading) {
                                             Text("Object ID: \(item.objectID)")
@@ -63,6 +73,7 @@ struct ExportView: View {
                                     }
                                     .padding(.vertical, 5)
                                 }
+                                // Si todos los ObjectID han sido escaneados, muestra el botón de Export
                                 if allObjectsScanned(for: truck) {
                                     Button(action: {
                                         markTruckAsCompleted(truck)
@@ -112,6 +123,7 @@ struct ExportView: View {
                     )
                 }
                 
+                // Vista del escáner
                 if isScanning {
                     ZStack {
                         Color.black.opacity(0.8)
@@ -144,7 +156,7 @@ struct ExportView: View {
         }
     }
 
-    // Computed property to filter trucks based on search text
+    // Computed property para filtrar camiones según el texto de búsqueda
     var filteredTruckData: [Truck] {
         if searchText.isEmpty {
             return truckData
@@ -153,16 +165,16 @@ struct ExportView: View {
         }
     }
 
-    // Function to calculate progress for a truck
+    // Calcula el progreso de escaneo para un camión
     func progress(for truck: Truck) -> Double {
         let scannedCount = truck.items.filter { scannedObjectIDs.contains($0.objectID) }.count
         return Double(scannedCount) / Double(truck.items.count)
     }
 
-    // Function to fetch truck data from the API
+    // Función para obtener los datos de camiones desde la API
     func fetchTruckData() {
         isLoading = true
-        //let urlString = "https://run.mocky.io/v3/e54e46e5-6e26-437f-a830-f0814ee77f93"
+        // let urlString = "https://run.mocky.io/v3/e54e46e5-6e26-437f-a830-f0814ee77f93"
         let urlString = "https://ews-emea.api.bosch.com/Api_XDock/api/TrukData"
         guard let url = URL(string: urlString) else {
             showError(message: "Invalid URL.")
@@ -195,7 +207,7 @@ struct ExportView: View {
         task.resume()
     }
 
-    // Validate if the scanned code matches the Object ID
+    // Valida si el código escaneado coincide con el ObjectID esperado
     func validateScannedObjectID(_ scannedCode: String?) {
         guard let code = scannedCode?.trimmingCharacters(in: .whitespacesAndNewlines),
               let objectID = currentObjectID?.trimmingCharacters(in: .whitespacesAndNewlines) else {
@@ -215,14 +227,14 @@ struct ExportView: View {
         }
     }
 
-    // Check if all objects for the truck have been scanned
+    // Verifica si todos los ObjectIDs para un camión han sido escaneados
     func allObjectsScanned(for truck: Truck) -> Bool {
         truck.items.allSatisfy { scannedObjectIDs.contains($0.objectID) }
     }
 
-    // Marca como completado, enviando *uno por uno* los TrackingNumber de cada Item
+    // Marca el camión como completado, enviando uno por uno los TrackingNumber de cada item
     func markTruckAsCompleted(_ truck: Truck) {
-        // Usamos DispatchGroup para saber cuándo terminaron todas las solicitudes
+        // Usamos DispatchGroup para saber cuándo terminan todas las solicitudes
         let dispatchGroup = DispatchGroup()
         var failedItems: [String] = []
 
@@ -250,7 +262,6 @@ struct ExportView: View {
     }
 
     // Envía una solicitud PUT por cada TrackingNumber; incluye un callback de éxito/fallo
-    // Envía una solicitud PUT por cada TrackingNumber; incluye un callback de éxito/fallo
     func sendTrackingRequest(for item: Item, completion: @escaping (Bool) -> Void) {
         let urlString = "https://ews-emea.api.bosch.com/Api_XDock/api/TrukData/UpdateBill"
 
@@ -269,7 +280,7 @@ struct ExportView: View {
             "DeliveryType": item.TrackingNumber
         ]
 
-        // Imprime en consola el debug de lo que se envía
+        // Debug: Imprime en consola el cuerpo de la solicitud
         print("DEBUG: Enviando solicitud PUT a \(urlString) con el siguiente cuerpo:")
         print(body)
         
@@ -312,14 +323,16 @@ struct ExportView: View {
         task.resume()
     }
 
-    // Show error in alert
+    // Muestra errores mediante alerta
     func showError(message: String) {
         errorMessage = message
         showErrorAlert = true
     }
 }
 
-// Data model for trucks
+// MARK: - Modelos de datos
+
+// Modelo de datos para camiones
 struct Truck: Codable, Identifiable {
     let id = UUID()
     let deliveryType: String
@@ -331,7 +344,7 @@ struct Truck: Codable, Identifiable {
     }
 }
 
-// Data model for items within a truck
+// Modelo de datos para items dentro de un camión
 struct Item: Codable, Identifiable {
     let id = UUID()
     let objectID: String
@@ -342,5 +355,13 @@ struct Item: Codable, Identifiable {
         case objectID = "ObjectID"
         case location = "Location"
         case TrackingNumber = "TrackingNumber"
+    }
+}
+
+
+// MARK: - Vista de Previsualización
+struct ExportView_Previews: PreviewProvider {
+    static var previews: some View {
+        ExportView()
     }
 }

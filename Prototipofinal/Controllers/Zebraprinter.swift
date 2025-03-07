@@ -90,6 +90,7 @@ class PrintViewController {
         let currentDateTime = getCurrentDateTime()
         let labelZPL = """
         ^XA
+        ^PR2
         ^MMT
         ^PW812
         ^LL1218

@@ -27,8 +27,10 @@ struct ItemModel: Codable, Identifiable, Hashable {
     let country : String
     let vendor: String
     let type: String
+    let ID : Int
 
     enum CodingKeys: String, CodingKey {
+        case ID = "id"
         case objectID = "ObjectID"
         case material = "Material"
         case invoiceNumber = "InvoiceNumber"
@@ -438,7 +440,6 @@ struct LogisticsVerificationView: View {
         }
         
         var request = URLRequest(url: url)
-        
         request.httpMethod = "GET"
         
         URLSession.shared.dataTask(with: request) { data, response, error in
@@ -477,10 +478,10 @@ struct LogisticsVerificationView: View {
                 decoder.keyDecodingStrategy = .convertFromSnakeCase
                 var fetchedTrackingData = try decoder.decode([TrackingDataModel].self, from: data)
                 
-                // Ordenamos cada tracking por objectID
+                // Ordenamos cada tracking por ID
                 fetchedTrackingData = fetchedTrackingData.map { tracking in
                     var mutableTracking = tracking
-                    mutableTracking.items = tracking.items.sorted { $0.objectID < $1.objectID }
+                    mutableTracking.items = tracking.items.sorted { $0.ID < $1.ID }
                     return mutableTracking
                 }
                 
@@ -498,7 +499,7 @@ struct LogisticsVerificationView: View {
             }
         }.resume()
     }
-    
+
     /// "Card" style para secciones
     func sectionBackground<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         ZStack {

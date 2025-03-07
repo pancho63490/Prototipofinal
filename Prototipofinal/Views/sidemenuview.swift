@@ -28,11 +28,11 @@ struct SideMenuView: View {
                     }) {
                         Text("Main View")
                             .font(.headline)
-                            .foregroundColor(.blue) // Texto en azul
+                            .foregroundColor(.blue)
                             .padding(.top, 100)
                             .padding(.leading, 20)
                     }
-
+                    
                     Button(action: {
                         withAnimation {
                             selectedView = "report"
@@ -41,11 +41,37 @@ struct SideMenuView: View {
                     }) {
                         Text("Report View")
                             .font(.headline)
-                            .foregroundColor(.blue) // Texto en azul
+                            .foregroundColor(.blue)
                             .padding(.top, 20)
                             .padding(.leading, 20)
                     }
-
+                    
+                    Button(action: {
+                        withAnimation {
+                            selectedView = "materialUnknown"
+                            isMenuOpen.toggle() // Ir a la Material Unknown View
+                        }
+                    }) {
+                        Text("Material Unknown")
+                            .font(.headline)
+                            .foregroundColor(.blue)
+                            .padding(.top, 20)
+                            .padding(.leading, 20)
+                    }
+                    
+                    Button(action: {
+                        withAnimation {
+                            selectedView = "insertTooling"
+                            isMenuOpen.toggle() // Ir a la Insert Tooling View
+                        }
+                    }) {
+                        Text("Insert Tooling")
+                            .font(.headline)
+                            .foregroundColor(.blue)
+                            .padding(.top, 20)
+                            .padding(.leading, 20)
+                    }
+                    
                     Spacer()
                 }
                 .frame(width: UIScreen.main.bounds.width * 0.35) // Ahora ocupa un 35% de la pantalla
@@ -53,7 +79,7 @@ struct SideMenuView: View {
                 .edgesIgnoringSafeArea(.all)
                 .offset(x: isMenuOpen ? 0 : -UIScreen.main.bounds.width * 0.35) // Oculto cuando está cerrado
                 .animation(.easeInOut(duration: 0.3), value: isMenuOpen)
-
+                
                 Spacer()
             }
         }

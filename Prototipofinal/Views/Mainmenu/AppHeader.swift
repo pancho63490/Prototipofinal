@@ -9,7 +9,7 @@ struct AppHeader: View {
             Image(systemName: "shippingbox.fill")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 80, height: 80)
+                .frame(width: 60, height: 60) // Tamaño reducido de 80x80 a 60x60
                 .foregroundColor(.white)
                 .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
                 .rotationEffect(.degrees(isAnimating ? 360 : 0)) // Animación de rotación

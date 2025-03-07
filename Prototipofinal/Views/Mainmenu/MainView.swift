@@ -25,213 +25,267 @@ struct ContentView: View {
     @State private var showManualInsertionAlert = false
     @State private var navigateToLogisticsVerificationView = false
 
+    // NUEVO: Controla la visibilidad del menú lateral
+    @State private var showSideMenu = false
+    
     let shipmentTypes = ["More Information", "Printing", "Verification", "Logis", "Export"]
     let apiService = APIService()
 
     var body: some View {
         NavigationView {
             ZStack {
-                VStack(spacing: 20) {
-                    AppHeader()
+                
+                // ===== Contenido principal =====
+                ZStack {
+                    VStack(spacing: 16) {  // Se reduce el spacing global para que no quede tanto hueco
+                        AppHeader()
 
-                    ReferenceInputView(referenceNumber: $referenceNumber, isScanning: $isScanning)
-                        .onSubmit {
-                            initiateNewSearch()
-                        }
-                        .onChange(of: referenceNumber) { newValue in
-                            referenceNumber = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
-                        }
-
-                    // Picker principal para "More Information", "Printing", etc.
-                    Picker("Option Type", selection: $selectedShipmentType) {
-                        ForEach(shipmentTypes, id: \.self) { type in
-                            Text(type)
-                        }
-                    }
-                    .pickerStyle(SegmentedPickerStyle())
-                    .padding()
-
-                    // Vista adicional basada en la selección
-                    if selectedShipmentType == "More Information" {
-                        if isLoading {
-                            ProgressView("Loading data...")
-                        } else if let trackingData = apiResponse, !trackingData.isEmpty {
-                            
-                            // Picker Global para "Inbond" y "Domestic"
-                            Picker(selection: $shipmentState.selectedInboundType, label: Text("Options")) {
-                                Text("Inbond").tag("Inbond" as String?)
-                                Text("Domestic").tag("Domestic" as String?)
+                        ReferenceInputView(referenceNumber: $referenceNumber, isScanning: $isScanning)
+                            .onSubmit {
+                                initiateNewSearch()
                             }
-                            .pickerStyle(SegmentedPickerStyle())
-                            .padding()
-                            
-                            MaterialListView(trackingData: storedTrackingData)
+                            .onChange(of: referenceNumber) { newValue in
+                                referenceNumber = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                            }
 
+                        // Picker principal para "More Information", "Printing", etc.
+                        Picker("Option Type", selection: $selectedShipmentType) {
+                            ForEach(shipmentTypes, id: \.self) { type in
+                                Text(type)
+                            }
+                        }
+                        .pickerStyle(SegmentedPickerStyle())
+                        .padding(.horizontal, 8)
+
+                        // Vista adicional basada en la selección
+                        if selectedShipmentType == "More Information" {
+                            if isLoading {
+                                ProgressView("Loading data...")
+                            } else if let trackingData = apiResponse, !trackingData.isEmpty {
+                                
+                                // Picker Global para "Inbond" y "Domestic"
+                                Picker(selection: $shipmentState.selectedInboundType, label: Text("Options")) {
+                                    Text("Inbond").tag("Inbond" as String?)
+                                    Text("Domestic").tag("Domestic" as String?)
+                                }
+                                .pickerStyle(SegmentedPickerStyle())
+                                .padding(.horizontal, 8)
+                                
+                                // Aquí la vista de materiales
+                                // Limitamos su altura para que no crezca indefinidamente
+                                MaterialListView(trackingData: storedTrackingData)
+                                    .frame(maxHeight: 300) // Ajusta según el espacio que desees
+                                    .padding(.horizontal, 8)
+
+                            } else {
+                                Text("No data found.")
+                                    .foregroundColor(.gray)
+                                    .padding(.horizontal, 8)
+                            }
+                        } else if selectedShipmentType == "Printing" {
+                            PrintingView(useCustomLabels: $useCustomLabels, customLabels: $customLabels)
+                        } else if selectedShipmentType == "Verification" {
+                            EmptyView()
+                        } else if selectedShipmentType == "Logis" {
+                            EmptyView()
+                        } else if selectedShipmentType == "Export" {
+                            EmptyView()
                         } else {
-                            Text("No data found.")
-                                .foregroundColor(.gray)
+                            EmptyView()
                         }
-                    } else if selectedShipmentType == "Printing" {
-                        PrintingView(useCustomLabels: $useCustomLabels, customLabels: $customLabels)
-                    } else if selectedShipmentType == "Verification" {
-                        EmptyView()
-                    } else if selectedShipmentType == "Logis" {
-                        EmptyView()
-                    } else if selectedShipmentType == "Export" {
-                        EmptyView()
-                    } else {
-                        EmptyView()
-                    }
 
-                    Spacer()
-                    
-                    if isLoading && selectedShipmentType != "More Information" {
-                        ProgressView("Loading...")
-                    }
-
-                    // Botón "Print" solo si la opción "Printing" está seleccionada
-                    if selectedShipmentType == "Printing" {
-                        Button(action: {
-                            handlePrintButton()
-                        }) {
-                            Text("Print \(useCustomLabels ? customLabels : uniqueObjectIDCount) labels")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(isLoading ? Color.gray : Color.blue)
-                                .foregroundColor(.white)
-                                .cornerRadius(10)
+                        Spacer()
+                        
+                        if isLoading && selectedShipmentType != "More Information" {
+                            ProgressView("Loading...")
                         }
-                        .disabled(
-                            isLoading ||
-                            referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-                            (apiResponse == nil || apiResponse!.isEmpty)
+
+                        // Botón "Print" solo si la opción "Printing" está seleccionada
+                        if selectedShipmentType == "Printing" {
+                            Button(action: {
+                                handlePrintButton()
+                            }) {
+                                Text("Print \(useCustomLabels ? customLabels : uniqueObjectIDCount) labels")
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(isLoading ? Color.gray : Color.blue)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(10)
+                            }
+                            .disabled(
+                                isLoading ||
+                                referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                                (apiResponse == nil || apiResponse!.isEmpty)
+                            )
+                            .padding(.horizontal, 8)
+                        }
+
+                        // Texto de redirección para "Export"
+                        if selectedShipmentType == "Export" {
+                            Text("Redirecting to ExportView...")
+                                .onAppear {
+                                    navigateToExportView = true
+                                }
+                        }
+                        if selectedShipmentType == "Logis" {
+                            Text("Redirecting to LogisView...")
+                                .onAppear {
+                                    navigateToLogisticsVerificationView = true
+                                }
+                        }
+                        
+                        // Navegaciones ocultas
+                        NavigationLink(
+                            destination: ManualInsertionView(),
+                            isActive: $shouldNavigateToManualInsertion
+                        ) {
+                            EmptyView()
+                        }
+                        
+                        NavigationLink(
+                            destination: LogisticsVerificationView(),
+                            isActive: $navigateToLogisticsVerificationView,
+                            label: { EmptyView() }
+                        )
+                        NavigationLink(
+                            destination: ExportView(),
+                            isActive: $navigateToExportView,
+                            label: { EmptyView() }
+                        )
+                        
+                        NavigationLink(
+                            destination: PrintView(
+                                referenceNumber: storedTrackingData.first?.externalDeliveryID ?? referenceNumber,
+                                trackingData: storedTrackingData,
+                                customLabels: customLabels,
+                                useCustomLabels: useCustomLabels,
+                                finalObjectIDs: $objectIDsFromPrint
+                            ),
+                            isActive: $shouldNavigateToPrint
+                        ) {
+                            EmptyView()
+                        }
+                        
+                        NavigationLink(
+                            destination: MaterialChecklistView(
+                                trackingData: storedTrackingData,
+                                objectIDs: objectIDsFromPrint
+                            ),
+                            isActive: $shouldNavigateToChecklist
+                        ) {
+                            EmptyView()
+                        }
+                    }
+                    .navigationTitle("Material Import")
+                    // Alerta de error
+                    .alert(isPresented: $showAlert) {
+                        Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+                    }
+                    // Alerta de inserción manual
+                    .alert(isPresented: $showManualInsertionAlert) {
+                        Alert(
+                            title: Text("No data found"),
+                            message: Text("Would you like to enter data manually?"),
+                            primaryButton: .default(Text("Yes"), action: {
+                                shouldNavigateToManualInsertion = true
+                            }),
+                            secondaryButton: .cancel(Text("Cancel"))
                         )
                     }
+                }
+                // Cámara para escanear
+                .sheet(isPresented: $isScanning) {
+                    CameraScannerWrapperView(scannedCode: .constant(nil)) { code in
+                        referenceNumber = code.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "")
+                        isScanning = false
+                        initiateNewSearch()
+                    }
+                    .edgesIgnoringSafeArea(.all)
+                }
+                // Ocultar teclado al tocar fuera
+                .onTapGesture {
+                    hideKeyboard()
+                }
+                // Observa cambios en el Picker principal
+                .onChange(of: selectedShipmentType) { newValue in
+                    if newValue == "Verification" {
+                        if referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            alertMessage = "You need a reference number to continue."
+                            showAlert = true
+                            selectedShipmentType = "More Information"
+                        } else if apiResponse == nil || apiResponse!.isEmpty {
+                            alertMessage = "No data found for the provided reference number."
+                            showAlert = true
+                            selectedShipmentType = "More Information"
+                        } else {
+                            storedTrackingData = apiResponse ?? []
+                            shouldNavigateToChecklist = true
+                        }
+                    } else if newValue == "Export" {
+                        if referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            alertMessage = "You need a reference number to continue."
+                            showAlert = true
+                            selectedShipmentType = "More Information"
+                        } else if apiResponse == nil || apiResponse!.isEmpty {
+                            alertMessage = "No data found for the provided reference number."
+                            showAlert = true
+                            selectedShipmentType = "More Information"
+                        } else {
+                            shouldNavigateToExportView = true
+                        }
+                    }
+                }
 
-                    // Texto de redirección para "Export"
-                    if selectedShipmentType == "Export" {
-                        Text("Redirecting to ExportView...")
-                            .onAppear {
-                                navigateToExportView = true
+                // ===== Menú lateral (Side Menu) =====
+                if showSideMenu {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Menú")
+                                .font(.headline)
+                                .padding(.top, 50)
+                            
+                            NavigationLink(destination: NewFormView()) {
+                                Text("Material Unknown")
                             }
-                    }
-                    if selectedShipmentType == "Logis" {
-                        Text("Redirecting to LogisView...")
-                            .onAppear {
-                                navigateToLogisticsVerificationView = true
+                            .padding(.vertical, 8)
+                            NavigationLink(destination: InsertToolingView()) {
+                                Text("Insert Tooling")
                             }
+                         
+                            .padding(.vertical, 8)
+                            NavigationLink(destination: DeliverySearchView()) {
+                                Text("Insert Tooling")
+                            }
+                         
+                            .padding(.vertical, 8)
+                            Spacer()
+                        }
+                        .frame(width: 250)
+                        .padding(.horizontal, 16)
+                        .background(Color.white)
+                        .shadow(radius: 5)
+
+                        Spacer()
                     }
-                    
-                    // Navegaciones ocultas
-                    NavigationLink(
-                        destination: ManualInsertionView(),
-                        isActive: $shouldNavigateToManualInsertion
-                    ) {
-                        EmptyView()
-                    }
-                    
-                    NavigationLink(
-                        destination: LogisticsVerificationView(),
-                        isActive: $navigateToLogisticsVerificationView,
-                        label: { EmptyView() }
-                    )
-                    NavigationLink(
-                        destination: ExportView(),
-                        isActive: $navigateToExportView,
-                        label: { EmptyView() }
-                    )
-                    
-                    NavigationLink(
-                        destination: PrintView(
-                            referenceNumber: storedTrackingData.first?.externalDeliveryID ?? referenceNumber,
-                            trackingData: storedTrackingData,
-                            customLabels: customLabels,
-                            useCustomLabels: useCustomLabels,
-                            finalObjectIDs: $objectIDsFromPrint
-                        ),
-                        isActive: $shouldNavigateToPrint
-                    ) {
-                        EmptyView()
-                    }
-                    
-                    NavigationLink(
-                        destination: MaterialChecklistView(
-                            trackingData: storedTrackingData,
-                            objectIDs: objectIDsFromPrint
-                        ),
-                        isActive: $shouldNavigateToChecklist
-                    ) {
-                        EmptyView()
-                    }
-                }
-                
-                .navigationTitle("Material Import")
-                .padding()
-                // Alerta de error
-                .alert(isPresented: $showAlert) {
-                    Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
-                }
-                // Alerta de inserción manual
-                .alert(isPresented: $showManualInsertionAlert) {
-                    Alert(
-                        title: Text("No data found"),
-                        message: Text("Would you like to enter data manually?"),
-                        primaryButton: .default(Text("Yes"), action: {
-                            shouldNavigateToManualInsertion = true
-                        }),
-                        secondaryButton: .cancel(Text("Cancel"))
-                    )
-                }
-                
-                // Eliminar la superposición actual de CameraScannerWrapperView
-            }
-            // Agregar el modificador .sheet aquí
-            .sheet(isPresented: $isScanning) {
-                CameraScannerWrapperView(scannedCode: .constant(nil)) { code in
-                    referenceNumber = code.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: " ", with: "")
-                    isScanning = false
-                    initiateNewSearch()
-                }
-                .edgesIgnoringSafeArea(.all) // Asegura que la vista ocupe toda la pantalla
-            }
-            .onTapGesture {
-                hideKeyboard()
-            }
-            .onChange(of: selectedShipmentType) { newValue in
-                if newValue == "Verification" {
-                    // Verificar si el número de referencia está vacío
-                    if referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        alertMessage = "You need a reference number to continue."
-                        showAlert = true
-                        selectedShipmentType = "More Information" // Revertir selección
-                    } else if apiResponse == nil || apiResponse!.isEmpty {
-                        alertMessage = "No data found for the provided reference number."
-                        showAlert = true
-                        selectedShipmentType = "More Information" // Revertir selección
-                    } else {
-                        storedTrackingData = apiResponse ?? []
-                        shouldNavigateToChecklist = true
-                    }
-                } else if newValue == "Export" {
-                    // Verificar si el número de referencia está vacío antes de exportar
-                    if referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        alertMessage = "You need a reference number to continue."
-                        showAlert = true
-                        selectedShipmentType = "More Information" // Revertir selección
-                    } else if apiResponse == nil || apiResponse!.isEmpty {
-                        alertMessage = "No data found for the provided reference number."
-                        showAlert = true
-                        selectedShipmentType = "More Information" // Revertir selección
-                    } else {
-                        shouldNavigateToExportView = true
-                    }
+                    .transition(.move(edge: .leading))
                 }
             }
+            // Botón estilo hamburguesa
+            .navigationBarItems(
+                leading: Button(action: {
+                    withAnimation {
+                        showSideMenu.toggle()
+                    }
+                }) {
+                    Image(systemName: "line.horizontal.3")
+                }
+            )
         }
     }
 
-    // Función para iniciar una nueva búsqueda, reseteando estados previos
+    // MARK: - Funciones de lógica
+
     func initiateNewSearch() {
         referenceNumber = referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines)
         self.apiResponse = nil
@@ -243,13 +297,9 @@ struct ContentView: View {
         self.alertMessage = ""
         self.showManualInsertionAlert = false
 
-   
-
-        // Iniciar nueva búsqueda
         fetchAPIResponse()
     }
 
-    // Función para manejar la acción del botón "Print"
     func handlePrintButton() {
         let trimmedReference = referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines)
         
@@ -266,7 +316,6 @@ struct ContentView: View {
         }
     }
 
-    // Función para obtener la respuesta de la API
     func fetchAPIResponse() {
         let trimmedReference = referenceNumber.trimmingCharacters(in: .whitespacesAndNewlines)
         referenceNumber = trimmedReference
@@ -290,12 +339,12 @@ struct ContentView: View {
                     print("Debug: Successful call. Data obtained: \(trackingData.count)")
 
                     if trackingData.isEmpty {
-                        // Mostrar alerta para preguntar si desean navegar a ManualInsertionView
+                        // Mostrar alerta para preguntar por inserción manual
                         self.showManualInsertionAlert = true
                         print("Debug: No data found. Asking user if they want to enter data manually.")
                     } else {
                         self.apiResponse = trackingData
-                        self.storedTrackingData = trackingData // Guardar datos permanentemente
+                        self.storedTrackingData = trackingData
 
                         // Extraer IDs únicos usando externalDeliveryID
                         let uniqueIDsSet = Set(trackingData.map { $0.externalDeliveryID })
@@ -305,7 +354,7 @@ struct ContentView: View {
                     }
 
                 case .failure(let error):
-                    // Manejar errores de red o de decodificación
+                    // Manejo de errores
                     self.alertMessage = "An error occurred: \(error.localizedDescription)"
                     self.showAlert = true
                     print("Debug: An error occurred: \(error.localizedDescription).")
@@ -314,7 +363,6 @@ struct ContentView: View {
         }
     }
 
-    // Función para ocultar el teclado
     func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
                                         to: nil, from: nil, for: nil)

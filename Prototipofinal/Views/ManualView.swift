@@ -354,17 +354,18 @@ struct ManualInsertionView: View {
     }
     
     /// Sheet para agregar un nuevo material
+    // Sheet para agregar un nuevo material
     struct AddMaterialSheet: View {
         @Environment(\.presentationMode) var presentationMode
         @Binding var materials: [Material]
         
         @State private var materialCode = ""
         @State private var quantity = ""
-        // Se fija el valor por defecto a "pcs" para la unidad de cantidad
+        // Valor predeterminado para unidad de cantidad
         @State private var selectedUnit = "pcs"
         @State private var grossWeight = ""
         @State private var netWeight = ""
-        // Se fija el valor por defecto a "LB" para la unidad de peso
+        // Valor predeterminado para unidad de peso
         @State private var weightUnit = "LB"
         
         // Opciones para la unidad de cantidad y peso
@@ -455,7 +456,43 @@ struct ManualInsertionView: View {
                         .background(Color(.systemGray6))
                         .cornerRadius(8)
                         
-                        // Peso Bruto
+                        // Campo de Net Weight (primero)
+                        HStack {
+                            CustomTextFieldWithIcon(
+                                icon: "scalemass.fill",
+                                title: "Net Weight",
+                                text: $netWeight,
+                                keyboardType: .decimalPad
+                            )
+                            // Al cambiar el netWeight, actualizar el grossWeight automáticamente
+                            .onChange(of: netWeight) { newValue in
+                                if let net = Double(newValue) {
+                                    let addition = (weightUnit == "KG") ? 13.65 : 30.10
+                                    grossWeight = String(format: "%.2f", net + addition)
+                                }
+                            }
+                            
+                            Button(action: {
+                                isShowingNetWeightScanner = true
+                            }) {
+                                Image(systemName: "camera")
+                                    .foregroundColor(.blue)
+                                    .padding()
+                            }
+                            .sheet(isPresented: $isShowingNetWeightScanner) {
+                                CameraScannerWrapperView(
+                                    scannedCode: .constant(nil),
+                                    onCodeScanned: { scannedNetWeight in
+                                        if let _ = numberFormatter.number(from: scannedNetWeight) {
+                                            netWeight = scannedNetWeight
+                                        }
+                                        isShowingNetWeightScanner = false
+                                    }
+                                )
+                            }
+                        }
+                        
+                        // Campo de Gross Weight (luego)
                         HStack {
                             CustomTextFieldWithIcon(
                                 icon: "scalemass",
@@ -484,35 +521,6 @@ struct ManualInsertionView: View {
                             }
                         }
                         
-                        // Peso Neto
-                        HStack {
-                            CustomTextFieldWithIcon(
-                                icon: "scalemass.fill",
-                                title: "Net Weight",
-                                text: $netWeight,
-                                keyboardType: .decimalPad
-                            )
-                            
-                            Button(action: {
-                                isShowingNetWeightScanner = true
-                            }) {
-                                Image(systemName: "camera")
-                                    .foregroundColor(.blue)
-                                    .padding()
-                            }
-                            .sheet(isPresented: $isShowingNetWeightScanner) {
-                                CameraScannerWrapperView(
-                                    scannedCode: .constant(nil),
-                                    onCodeScanned: { scannedNetWeight in
-                                        if let _ = numberFormatter.number(from: scannedNetWeight) {
-                                            netWeight = scannedNetWeight
-                                        }
-                                        isShowingNetWeightScanner = false
-                                    }
-                                )
-                            }
-                        }
-                        
                         // Picker para Unidad de Peso General
                         Picker("Weight Unit", selection: $weightUnit) {
                             ForEach(weightUnits, id: \.self) { unit in
@@ -523,6 +531,13 @@ struct ManualInsertionView: View {
                         .padding()
                         .background(Color(.systemGray6))
                         .cornerRadius(8)
+                        // Al cambiar la unidad de peso, actualizar también el grossWeight
+                        .onChange(of: weightUnit) { newValue in
+                            if let net = Double(netWeight) {
+                                let addition = (newValue == "KG") ? 13.65 : 30.10
+                                grossWeight = String(format: "%.2f", net + addition)
+                            }
+                        }
                         
                         // Botón "Add"
                         Button(action: {
@@ -553,7 +568,7 @@ struct ManualInsertionView: View {
                                 // Cerrar sheet
                                 presentationMode.wrappedValue.dismiss()
                             } else {
-                                // Opcional: puedes mostrar una alerta de error si faltan datos
+                                // Opcional: mostrar una alerta de error si faltan datos
                             }
                         }) {
                             Text("Add")
@@ -593,6 +608,7 @@ struct ManualInsertionView: View {
             }
         }
     }
+
     
     struct ManualInsertionView_Previews: PreviewProvider {
         static var previews: some View {
