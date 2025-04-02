@@ -681,7 +681,6 @@ struct MaterialChecklistView: View {
     }
 }
 
-// MARK: - MultipleMaterialSelectionView
 struct MultipleMaterialSelectionView: View {
     var availableMaterials: [String]
     var remainingQuantities: [String: Int]
@@ -696,6 +695,11 @@ struct MultipleMaterialSelectionView: View {
     @State private var selectedMaterials: [String] = []
     @State private var quantitiesForSelected: [String: String] = [:]
     @State private var searchText = ""
+    
+    // Variable para almacenar el código escaneado
+    @State private var scannedCode: String? = nil
+    // Estado para mostrar el scanner
+    @State private var showingScanner = false
 
     var filteredMaterials: [String] {
         if searchText.isEmpty {
@@ -715,12 +719,21 @@ struct MultipleMaterialSelectionView: View {
                         .font(.headline)
                         .padding()
 
-                    // Buscador
+                    // Buscador con botón para activar scanner
                     HStack {
                         TextField("Search materials...", text: $searchText)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .padding(.horizontal)
+                        
+                        // Botón de scanner
+                        Button(action: {
+                            showingScanner = true
+                        }) {
+                            Image(systemName: "barcode.viewfinder")
+                                .font(.title2)
+                        }
+                        .padding(.trailing)
                     }
+                    .padding(.horizontal)
 
                     // Lista de toggles
                     List(filteredMaterials, id: \.self) { material in
@@ -736,12 +749,10 @@ struct MultipleMaterialSelectionView: View {
                                 },
                                 set: { newValue in
                                     if newValue {
-                                        // Agregar al final si no estaba
                                         if !selectedMaterials.contains(material) {
                                             selectedMaterials.append(material)
                                         }
                                     } else {
-                                        // Remover si estaba
                                         if let idx = selectedMaterials.firstIndex(of: material) {
                                             selectedMaterials.remove(at: idx)
                                         }
@@ -755,7 +766,7 @@ struct MultipleMaterialSelectionView: View {
                     Button("Continue") {
                         if !selectedMaterials.isEmpty {
                             step = 2
-                            // Inicializar cantidades
+                            // Inicializar cantidades para cada material seleccionado
                             for mat in selectedMaterials {
                                 quantitiesForSelected[mat] = ""
                             }
@@ -791,7 +802,6 @@ struct MultipleMaterialSelectionView: View {
                         Spacer()
 
                         Button("Add All") {
-                            // Construimos un array de pares
                             var finalArray: [(String, Int)] = []
                             for mat in selectedMaterials {
                                 let textQty = quantitiesForSelected[mat] ?? "0"
@@ -813,10 +823,18 @@ struct MultipleMaterialSelectionView: View {
                     }
                 }
             }
+            // Presentación del scanner en un sheet
+            .sheet(isPresented: $showingScanner) {
+                CameraScannerWrapperView(scannedCode: $scannedCode) { code in
+                    // Al recibir el código escaneado, se asigna al campo de búsqueda
+                    scannedCode = code
+                    searchText = code
+                    showingScanner = false
+                }
+            }
         }
     }
 }
-
 // MARK: - SingleMaterialDistributionView
 struct SingleMaterialDistributionView: View {
     let material: String

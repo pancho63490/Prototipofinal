@@ -1,7 +1,7 @@
 import Foundation
 struct TrackingData: Codable, Identifiable {
     let id = UUID()
-    let externalDeliveryID: String
+    var externalDeliveryID: String
     let material: String
     let deliveryQty: String
     let deliveryNo: String
