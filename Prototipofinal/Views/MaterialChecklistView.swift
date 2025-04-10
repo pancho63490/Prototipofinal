@@ -22,6 +22,7 @@ struct MaterialData: Codable {
     let Peso_bruto: Decimal?
     let TYPE_SHIPMENT: String?
     let VENDOR: String?
+    var Grouping : String?
 }
 
 
@@ -55,6 +56,12 @@ struct MaterialChecklistView: View {
     
     // Sheet para distribuir un solo material a todos los ObjectIDs
     @State private var showingSingleMaterialDistribution = false
+    @State private var showMissingGroupingSheet = false
+    @State private var missingGroupingIndices: [Int] = []
+    @State private var groupingText = ""
+
+    // Para retener provisionalmente el array que quieras enviar
+    @State private var finalDataToSend: [MaterialData] = []
 
     // Alertas
     enum ActiveAlert: Identifiable {
@@ -282,6 +289,32 @@ struct MaterialChecklistView: View {
                 }
             }
         }
+        .sheet(isPresented: $showMissingGroupingSheet) {
+            VStack(spacing: 20) {
+                Text("Missing Grouping")
+                    .font(.headline)
+                Text("One or more items have no Grouping. Please enter the value to use:")
+                    .multilineTextAlignment(.center)
+                
+                TextField("Enter grouping...", text: $groupingText)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding()
+                
+                Button("OK") {
+                    // Asignar el grouping que el usuario escribió
+                    for idx in missingGroupingIndices {
+                        // OJO: Cambia `finalDataToSend[idx].Grouping` de `let` a `var` en tu modelo.
+                        // Debe ser `var Grouping: String?` para poder cambiarlo aquí.
+                        finalDataToSend[idx].Grouping = groupingText
+                    }
+                    showMissingGroupingSheet = false
+                    // Mandar el request real
+                    actuallySendDataToServer(finalDataToSend)
+                }
+                .padding(.top, 10)
+            }
+            .padding()
+        }
         // MARK: - Alerts
         .alert(item: $activeAlert) { alert in
             switch alert {
@@ -499,7 +532,8 @@ struct MaterialChecklistView: View {
         return message
     }
 
-    /// Envía el JSON, con la opción de forzar todo a "D" si hay faltantes.
+    //// Envía el JSON, con la opción de forzar todo a "D" si hay faltantes,
+    /// y detecta si hace falta `Grouping`. De ser así, abre un sheet para capturar el valor.
     private func sendData(billAllAsD: Bool) {
         // 1) Construimos el array final, en el mismo orden que el usuario fue agregando
         var finalData: [MaterialData] = []
@@ -540,8 +574,10 @@ struct MaterialChecklistView: View {
                     Peso_neto: track.pesoNeto,
                     Peso_bruto: track.pesoBruto,
                     TYPE_SHIPMENT: shipmentState.selectedInboundType ?? "Unknown",
-                    VENDOR: track.supplierName
-                    
+                    VENDOR: track.supplierName,
+                    // Asegúrate de que sea var Grouping en tu modelo
+                    // y aquí se toma inicialmente de track.grouping
+                    Grouping: track.grouping
                 )
                 finalData.append(newItem)
                 
@@ -595,7 +631,8 @@ struct MaterialChecklistView: View {
                                 Peso_neto: track.pesoNeto,
                                 Peso_bruto: track.pesoBruto,
                                 TYPE_SHIPMENT: shipmentState.selectedInboundType ?? "Unknown",
-                                VENDOR: track.supplierName
+                                VENDOR: track.supplierName,
+                                Grouping: track.grouping
                             )
                             finalData.append(dummy)
                         }
@@ -604,10 +641,84 @@ struct MaterialChecklistView: View {
             }
         }
         
-        // 3) Convertir a JSON y enviar
-        sendJSONData(finalData)
+        // 3) Guardar el array final en una propiedad de estado para uso posterior
+        self.finalDataToSend = finalData
+        
+        // 4) Revisar si alguno de estos items tiene Grouping nulo o vacío.
+        //    De ser así, guardamos sus índices y mostramos el sheet.
+        let noGroupingIndices: [Int] = finalData.enumerated().compactMap { (offset, element) -> Int? in
+            if let g = element.Grouping, !g.trimmingCharacters(in: .whitespaces).isEmpty {
+                // Ok, no falta grouping
+                return nil
+            } else {
+                // Falta grouping, devolvemos el índice
+                return offset
+            }
+        }
+        
+        if !noGroupingIndices.isEmpty {
+            // Tenemos al menos uno sin grouping
+            self.missingGroupingIndices = noGroupingIndices
+            // Forzamos la aparición del sheet
+            self.showMissingGroupingSheet = true
+            return
+        }
+        
+        // 5) Si no falta grouping, hacemos la llamada final
+        actuallySendDataToServer(finalData)
     }
+    private func actuallySendDataToServer(_ data: [MaterialData]) {
+        // Tal cual tu "sendJSONData(_ data: [MaterialData])"
+        // Solo que cambiamos el nombre para distinguirlo.
 
+        guard let jsonData = try? JSONEncoder().encode(data) else {
+            showError(message: "Error encoding data to JSON.")
+            return
+        }
+
+        if let jsonString = String(data: jsonData, encoding: .utf8) {
+            print("JSON to be sent:\n\(jsonString)")
+        }
+
+        let urlString = "https://ews-emea.api.bosch.com/Api_XDock/api/Update"
+        guard let url = URL(string: urlString) else {
+            showError(message: "Invalid URL.")
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = jsonData
+
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            if let httpResponse = response as? HTTPURLResponse {
+                print("Response Code: \(httpResponse.statusCode)")
+            }
+            if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                print("Server Response:\n\(responseString)")
+            }
+
+            if let error = error {
+                DispatchQueue.main.async {
+                    self.showError(message: "Error sending data: \(error.localizedDescription)")
+                }
+                return
+            }
+
+            // Asumimos 200 como éxito
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                DispatchQueue.main.async {
+                    self.showSuccess()
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self.showError(message: "Server response error.")
+                }
+            }
+        }
+        task.resume()
+    }
     private func sendJSONData(_ data: [MaterialData]) {
         guard let jsonData = try? JSONEncoder().encode(data) else {
             showError(message: "Error encoding data to JSON.")

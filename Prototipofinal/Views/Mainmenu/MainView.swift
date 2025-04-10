@@ -1,6 +1,5 @@
 import SwiftUI
 
-// Estructura de ejemplo para TrackingData (asegúrate de que externalDeliveryID sea var)
 
 
 // Vista para ingresar el nuevo tracking en búsquedas múltiples
@@ -21,6 +20,7 @@ struct NewTrackingInputView: View {
                 Spacer()
             }
             .navigationTitle("Nuevo Tracking")
+            .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(
                 leading: Button("Cancelar", action: cancelAction),
                 trailing: Button("Asignar", action: assignAction)
@@ -29,7 +29,18 @@ struct NewTrackingInputView: View {
     }
 }
 
-// ContentView completa
+// Nuevo banner minimalista y delgado
+struct Banner: View {
+    var body: some View {
+        Image("banner")
+            .resizable()
+            .scaledToFill()
+            .frame(height: 30)  // Ajusta la altura para hacerlo más o menos delgado
+            .clipped()
+    }
+}
+
+// ContentView completa con estilo minimalista
 struct ContentView: View {
     // Objeto global para "Inbond" / "Domestic"
     @EnvironmentObject var shipmentState: ShipmentState
@@ -71,10 +82,15 @@ struct ContentView: View {
             ZStack {
                 // ===== Contenido principal =====
                 ZStack {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 8) {
+                        Banner()
+
+                        // Encabezado de la App (puedes personalizarlo o hacerlo más compacto)
                         AppHeader()
 
+                        // Campo de texto y opciones de escaneo
                         ReferenceInputView(referenceNumber: $referenceNumber, isScanning: $isScanning)
+                            .padding(.horizontal, 8)
                             .onSubmit {
                                 initiateNewSearch()
                             }
@@ -121,12 +137,11 @@ struct ContentView: View {
                             EmptyView()
                         } else if selectedShipmentType == "Export" {
                             EmptyView()
-                        } else {
-                            EmptyView()
                         }
 
                         Spacer()
 
+                        // Indicador de carga, si no estamos en More Information
                         if isLoading && selectedShipmentType != "More Information" {
                             ProgressView("Loading...")
                         }
@@ -196,7 +211,8 @@ struct ContentView: View {
                             isActive: $shouldNavigateToChecklist
                         ) { EmptyView() }
                     }
-                    .navigationTitle("Material Import")
+                    .navigationTitle("Robert Bosch JuP2")
+                    .navigationBarTitleDisplayMode(.inline)  // Modo inline para un encabezado más compacto
                     // Alertas de error e inserción manual
                     .alert(isPresented: $showAlert) {
                         Alert(title: Text("Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
@@ -287,10 +303,10 @@ struct ContentView: View {
                             .padding(.vertical, 8)
                             Spacer()
                         }
-                        .frame(width: 250)
-                        .padding(.horizontal, 16)
+                        .frame(width: 220)  // Ajusta para hacerlo más delgado si lo deseas
+                        .padding(.horizontal, 8)
                         .background(Color.white)
-                        .shadow(radius: 5)
+                        .shadow(radius: 3)
 
                         Spacer()
                     }
@@ -455,13 +471,22 @@ struct ContentView: View {
         }
         storedTrackingData = storedTrackingData.map { data in
             var modifiedData = data
-            modifiedData.externalDeliveryID = trimmedNewTracking
+            modifiedData.grouping = trimmedNewTracking
             return modifiedData
         }
         apiResponse = storedTrackingData
         print("Nuevo tracking asignado: \(trimmedNewTracking) a todos los materiales.")
     }
 
+    func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                        to: nil, from: nil, for: nil)
+    }
+}
+
+
+// Extensión para ocultar teclado
+extension View {
     func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
                                         to: nil, from: nil, for: nil)

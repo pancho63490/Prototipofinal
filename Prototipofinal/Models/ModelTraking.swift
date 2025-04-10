@@ -12,6 +12,7 @@ struct TrackingData: Codable, Identifiable {
     let unit: String
     let pesoBruto: Decimal?
     let pesoNeto: Decimal?
+    var grouping: String?
    
     
     enum CodingKeys: String, CodingKey {
@@ -26,7 +27,7 @@ struct TrackingData: Codable, Identifiable {
         case unit = "UNIT"
         case pesoBruto = "Peso_bruto"
         case pesoNeto = "Peso_neto"
-  
+        case grouping = "Grouping_number"
     }
 }
 
