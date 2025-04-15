@@ -85,7 +85,9 @@ struct LogisticsVerificationView: View {
     }
     
     var body: some View {
+        Banner()
         NavigationView {
+            
             ZStack {
                 Color(.systemGroupedBackground)
                     .edgesIgnoringSafeArea(.all)

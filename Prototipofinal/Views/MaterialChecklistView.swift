@@ -79,6 +79,7 @@ struct MaterialChecklistView: View {
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
+        Banner()
         NavigationView {
             Form {
                 // 1. Info general
@@ -192,10 +193,12 @@ struct MaterialChecklistView: View {
                         activeAlert = .confirm
                     } label: {
                         Text("Send")
-                            .padding()
+                                   // Texto más pequeño
+                            .padding(6)             // Menor padding
                             .background(Color.blue)
                             .foregroundColor(.white)
-                            .cornerRadius(8)
+                            .cornerRadius(4)        // Esquina ligeramente redondeada
+                            .frame()       // Ajusta el ancho (opcional)
                     }
                 }
             }

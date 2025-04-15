@@ -25,6 +25,7 @@ struct ExportView: View {
     @State private var completionMessage = ""
 
     var body: some View {
+        Banner()
         NavigationView {
             ZStack {
                 VStack {

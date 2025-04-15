@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct PrintingView: View {
-    // Se mantiene la propiedad, por ejemplo, con valor inicial true
+    // Propiedades enlazadas
     @Binding var useCustomLabels: Bool
     @Binding var customLabels: Int
 
@@ -13,39 +13,53 @@ struct PrintingView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 16) {
+            // Encabezado destacado
             Text("Print Labels")
-                .font(.headline)
+                .font(.title2)
+                .fontWeight(.semibold)
+                .foregroundColor(.primary)
             
-            // Toggle que se oculta del usuario
-            Toggle("Use Custom Labels", isOn: $useCustomLabels)
-                .hidden() // El Toggle está presente en la vista pero no se muestra
-            
-            HStack {
-                // Se muestra el texto según el valor de useCustomLabels
-                if useCustomLabels {
-                    Text("Custom Quantity:")
-                } else {
-                    Text("Default Quantity:")
-                }
+            // Contenedor de campos en un HStack para simular una fila
+            HStack(spacing: 12) {
+                // Etiqueta que varía según useCustomLabels
+                Text(useCustomLabels ? "Custom Quantity:" : "Default Quantity:")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
                 
-                // TextField para ingresar manualmente el número de etiquetas
+                // TextField con estilo personalizado para números
                 TextField("Enter quantity", value: $customLabels, formatter: numberFormatter)
                     .keyboardType(.numberPad)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding(8)
                     .frame(width: 100)
+                    .background(Color.white)
+                    .cornerRadius(6)
+                    .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
             }
-            .padding()
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+            .background(Color(.systemBackground))
+            .cornerRadius(8)
+            
+            // Se puede agregar un mensaje explicativo o separador si se requiere
+         Text("Select a quantity to print your custom labels")
         }
         .padding()
         .background(Color(.systemGray6))
-        .cornerRadius(10)
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+        .padding()  // Padding exterior para que no se pegue al borde de la pantalla
+        // Mantenemos el Toggle oculto, ya que su valor afecta la UI
+        .overlay(
+            Toggle("", isOn: $useCustomLabels)
+                .hidden()
+        )
     }
 }
 
 struct PrintingView_Previews: PreviewProvider {
     static var previews: some View {
-        // En la vista previa, se inicializa useCustomLabels en true para usar siempre custom
         PrintingView(useCustomLabels: .constant(true), customLabels: .constant(1))
+            .preferredColorScheme(.light)
     }
 }

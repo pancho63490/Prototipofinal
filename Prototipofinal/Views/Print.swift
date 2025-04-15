@@ -15,6 +15,7 @@ struct ObjectIDOptionsSheet: View {
     @State private var selectedOption: ObjectIDOption = .reprint
     
     var body: some View {
+        Banner()
         NavigationView {
             VStack(spacing: 20) {
                 Text("Existing Object IDs Found")
@@ -182,7 +183,7 @@ struct PrintView: View {
         
         let requestData: [String: Any] = [
             "QTY": totalLabels,
-            "REF_NUM": firstTrackingData.externalDeliveryID
+            "REF_NUM": firstTrackingData.grouping/*exteralDeliveryID*/
         ]
         
         print("Total labels to print: \(totalLabels)")

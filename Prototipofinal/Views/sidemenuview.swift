@@ -6,78 +6,70 @@ struct SideMenuView: View {
 
     var body: some View {
         ZStack {
-            // Fondo que oscurece el contenido principal cuando el menú está abierto
+            // Capa semitransparente para oscurecer el contenido principal.
             if isMenuOpen {
-                Color.black.opacity(0.3)
+                Color.black.opacity(0.2)
                     .ignoresSafeArea()
                     .onTapGesture {
                         withAnimation {
-                            isMenuOpen.toggle() // Cerrar el menú al tocar fuera
+                            isMenuOpen.toggle()
                         }
                     }
             }
-
-            // Menú lateral
-            HStack {
-                VStack(alignment: .leading) {
-                    Button(action: {
+            
+            HStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 24) {
+                    Spacer(minLength: 100)
+                    
+                    // Botón para Main View
+                    Button("Main View") {
                         withAnimation {
                             selectedView = "main"
-                            isMenuOpen.toggle() // Ir a la Main View
+                            isMenuOpen.toggle()
                         }
-                    }) {
-                        Text("Main View")
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                            .padding(.top, 100)
-                            .padding(.leading, 20)
                     }
+                    .font(.headline)
+                    .foregroundColor(.primary)
                     
-                    Button(action: {
+                    // Botón para Report View
+                    Button("Report View") {
                         withAnimation {
                             selectedView = "report"
-                            isMenuOpen.toggle() // Ir a la Report View
+                            isMenuOpen.toggle()
                         }
-                    }) {
-                        Text("Report View")
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                            .padding(.top, 20)
-                            .padding(.leading, 20)
                     }
+                    .font(.headline)
+                    .foregroundColor(.primary)
                     
-                    Button(action: {
+                    // Botón para Material Unknown
+                    Button("Material Unknown") {
                         withAnimation {
                             selectedView = "materialUnknown"
-                            isMenuOpen.toggle() // Ir a la Material Unknown View
+                            isMenuOpen.toggle()
                         }
-                    }) {
-                        Text("Material Unknown")
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                            .padding(.top, 20)
-                            .padding(.leading, 20)
                     }
+                    .font(.headline)
+                    .foregroundColor(.primary)
                     
-                    Button(action: {
+                    // Botón para Insert Tooling
+                    Button("Insert Tooling") {
                         withAnimation {
                             selectedView = "insertTooling"
-                            isMenuOpen.toggle() // Ir a la Insert Tooling View
+                            isMenuOpen.toggle()
                         }
-                    }) {
-                        Text("Insert Tooling")
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                            .padding(.top, 20)
-                            .padding(.leading, 20)
                     }
+                    .font(.headline)
+                    .foregroundColor(.primary)
                     
                     Spacer()
                 }
-                .frame(width: UIScreen.main.bounds.width * 0.35) // Ahora ocupa un 35% de la pantalla
-                .background(Color.white) // Fondo blanco para el menú
+                .padding(.horizontal, 16)
+                .frame(width: UIScreen.main.bounds.width * 0.35)
+                // Usamos el color del sistema para mayor coherencia minimalista
+                .background(Color(UIColor.systemBackground))
                 .edgesIgnoringSafeArea(.all)
-                .offset(x: isMenuOpen ? 0 : -UIScreen.main.bounds.width * 0.35) // Oculto cuando está cerrado
+                // El desplazamiento del menú depende de su estado
+                .offset(x: isMenuOpen ? 0 : -UIScreen.main.bounds.width * 0.35)
                 .animation(.easeInOut(duration: 0.3), value: isMenuOpen)
                 
                 Spacer()

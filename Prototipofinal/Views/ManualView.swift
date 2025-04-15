@@ -45,6 +45,7 @@ struct ManualInsertionView: View {
         VStack(spacing: 20) {
             // Título / Logo
             VStack {
+                Banner()
                 Image(systemName: "shippingbox.fill") // Ícono a tu gusto
                     .resizable()
                     .scaledToFit()

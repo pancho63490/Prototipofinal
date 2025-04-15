@@ -1,21 +1,30 @@
 import SwiftUI
 
-// MARK: - Modelos para decodificar la respuesta JSON
+// MARK: - Models for Decoding JSON Response
 
 struct DeliveryResponse2: Codable {
     let data: [Delivery]
 }
 
 struct Delivery: Codable, Identifiable {
-    var id: String { EXTERNAL_DELVRY_ID }
-    let EXTERNAL_DELVRY_ID: String
-    let MATERIAL: String
-    let DELIVERY_QTY: String
-    let SUPPLIER_NAME: String
-    let SRC: String
+    var id: String { externalDeliveryID }
+    
+    let externalDeliveryID: String
+    let material: String
+    let deliveryQty: String
+    let supplierName: String
+    let src: String
+
+    enum CodingKeys: String, CodingKey {
+        case externalDeliveryID = "EXTERNAL_DELVRY_ID"
+        case material = "MATERIAL"
+        case deliveryQty = "DELIVERY_QTY"
+        case supplierName = "SUPPLIER_NAME"
+        case src = "SRC"
+    }
 }
 
-// MARK: - Vista Principal
+// MARK: - Main View
 
 struct DeliverySearchView: View {
     @State private var searchText = ""
@@ -24,48 +33,58 @@ struct DeliverySearchView: View {
     @State private var errorMessage: String?
     
     var body: some View {
-        NavigationView {
-            VStack {
-                // Buscador
-                HStack {
-                    TextField("Buscar...", text: $searchText)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                    Button(action: {
-                        fetchDeliveries()
-                    }) {
-                        Text("Buscar")
+        VStack(spacing: 0) {
+            // Optional banner view at the top, if you have one defined
+            Banner()
+            
+            NavigationView {
+                VStack {
+                    // Search bar
+                    HStack {
+                        TextField("Search...", text: $searchText)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                        
+                        Button(action: {
+                            fetchDeliveries()
+                        }) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.title2)
+                        }
+                        .accessibilityLabel("Search")
                     }
-                }
-                .padding()
-                
-                // Indicador de carga o mensaje de error
-                if isLoading {
-                    ProgressView("Cargando...")
-                } else if let errorMessage = errorMessage {
-                    Text("Error: \(errorMessage)")
-                        .foregroundColor(.red)
-                        .padding()
-                }
-                
-                // Lista de resultados
-                List(deliveries) { delivery in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("External Delivery: \(delivery.EXTERNAL_DELVRY_ID)")
-                            .fontWeight(.bold)
-                        Text("Material: \(delivery.MATERIAL)")
-                        Text("Cantidad: \(delivery.DELIVERY_QTY)")
-                        Text("Supplier: \(delivery.SUPPLIER_NAME)")
-                        Text("SRC: \(delivery.SRC)")
+                    .padding()
+                    
+                    // Loading indicator or error message display
+                    if isLoading {
+                        ProgressView("Loading...")
+                    } else if let errorMessage = errorMessage {
+                        Text("Error: \(errorMessage)")
+                            .foregroundColor(.red)
+                            .padding()
                     }
-                    .padding(.vertical, 4)
+                    
+                    // List of search results
+                    List(deliveries) { delivery in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("External Delivery: \(delivery.externalDeliveryID)")
+                                .font(.headline)
+                            Text("Material: \(delivery.material)")
+                            Text("Quantity: \(delivery.deliveryQty)")
+                            Text("Supplier: \(delivery.supplierName)")
+                            Text("SRC: \(delivery.src)")
+                        }
+                        .padding(8)
+                    }
+                    .listStyle(InsetGroupedListStyle())
                 }
+                .navigationTitle("Delivery Search")
             }
-            .navigationTitle("Buscador de Entregas")
         }
     }
     
-    // MARK: - Función para hacer la petición PUT
+    // MARK: - Function to Make the PUT Request
     func fetchDeliveries() {
+        // Trim search text and check if not empty.
         guard !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             deliveries = []
             return
@@ -75,7 +94,7 @@ struct DeliverySearchView: View {
         errorMessage = nil
         
         guard let url = URL(string: "https://ews-emea.api.bosch.com/Api_XDock/api/updatefiles") else {
-            errorMessage = "URL inválida"
+            errorMessage = "Invalid URL"
             isLoading = false
             return
         }
@@ -84,6 +103,7 @@ struct DeliverySearchView: View {
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
+        // JSON body with search text
         let body: [String: String] = ["Search": searchText]
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
@@ -98,17 +118,18 @@ struct DeliverySearchView: View {
                 isLoading = false
                 
                 if let error = error {
-                    errorMessage = "Error de conexión: \(error.localizedDescription)"
+                    errorMessage = "Connection error: \(error.localizedDescription)"
                     return
                 }
                 
-                guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-                    errorMessage = "Error en la respuesta del servidor."
+                guard let httpResponse = response as? HTTPURLResponse,
+                      (200...299).contains(httpResponse.statusCode) else {
+                    errorMessage = "Server returned an error."
                     return
                 }
                 
                 guard let data = data else {
-                    errorMessage = "No se recibieron datos."
+                    errorMessage = "No data received."
                     return
                 }
                 
@@ -117,18 +138,11 @@ struct DeliverySearchView: View {
                     let responseData = try decoder.decode(DeliveryResponse2.self, from: data)
                     deliveries = responseData.data
                 } catch {
-                    errorMessage = "Error al decodificar la respuesta: \(error.localizedDescription)"
-                    print("Datos recibidos: \(String(data: data, encoding: .utf8) ?? "Formato incorrecto")")
+                    errorMessage = "Decoding error: \(error.localizedDescription)"
+                    print("Received data: \(String(data: data, encoding: .utf8) ?? "Invalid Format")")
                 }
             }
         }.resume()
     }
 }
 
-// MARK: - Vista de Previsualización
-
-struct DeliverySearchView_Previews: PreviewProvider {
-    static var previews: some View {
-        DeliverySearchView()
-    }
-}

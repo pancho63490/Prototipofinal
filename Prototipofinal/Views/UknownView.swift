@@ -14,6 +14,7 @@ struct NewFormView: View {
     @State private var showCameraPicker = false
 
     var body: some View {
+        Banner()
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {

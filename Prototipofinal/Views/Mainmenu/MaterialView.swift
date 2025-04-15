@@ -10,77 +10,78 @@ struct Material: Identifiable {
 
 struct MaterialListView: View {
     @State private var materials: [Material] = []
-    var trackingData: [TrackingData]
+    var trackingData: [TrackingData]  // Se asume TrackingData con propiedades 'material', 'deliveryQty' y 'unit'
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 8) {
-                
-                // Título, ahora más pequeño (title3) y semibold en lugar de .title
-                Text("Material List")
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 16)
-                
-                // Si no hay materiales
+        NavigationView {
+            List {
                 if materials.isEmpty {
                     Text("No materials available")
-                        .font(.footnote)       // Más pequeño que .subheadline
+                        .font(.footnote)
                         .foregroundColor(.gray)
-                        .padding(.horizontal, 16)
                         .frame(maxWidth: .infinity, alignment: .center)
+                        // Se usa un pequeño inset para el mensaje
+                        .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                        .listRowBackground(Color.clear)
                 } else {
-                    // Para cada material, mostramos una fila “tipo tarjeta”
                     ForEach(materials) { material in
-                        HStack(spacing: 8) {
-                            // Ícono principal
+                        HStack(spacing: 17) {
+                            // Ícono principal con fondo y forma redondeada
                             Image(systemName: "cube.box")
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: 24, height: 24) // Más pequeño que antes
+                                .frame(width: 24, height: 24)
                                 .foregroundColor(.blue)
+                                .padding(5)
+                                .background(Color.blue.opacity(0.15))
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
                             
-                            // Columnas de texto
-                            VStack(alignment: .leading, spacing: 2) {
-                                // Referencia (subheadline un poco más grande que footnote)
+                            VStack(alignment: .leading, spacing: 6) {
+                                // Referencia en fuente subheadline para resaltar
                                 Text(material.reference)
                                     .font(.subheadline)
+                                    .foregroundColor(.primary)
                                 
-                                HStack {
-                                    Image(systemName: "number.circle")
-                                        .foregroundColor(.green)
-                                    // Cantidad con fuente aún más pequeña (caption)
-                                    Text("\(material.quantity)")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                
-                                HStack {
-                                    Image(systemName: "scalemass")
-                                        .foregroundColor(.orange)
-                                    // Unidad también en caption
-                                    Text(material.unit)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
+                                HStack(spacing: 10) {
+                                    // Cantidad
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "number.circle")
+                                            .foregroundColor(.green)
+                                        Text("\(material.quantity)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    // Unidad
+                                    HStack(spacing: 10) {
+                                        Image(systemName: "scalemass")
+                                            .foregroundColor(.orange)
+                                        Text(material.unit)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
                                 }
                             }
-                            
                             Spacer()
                         }
-                        .padding(8)
+                        // Se utiliza un padding vertical moderado
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 6)
                         .background(Color.white)
-                        .cornerRadius(6)
-                        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
-                        .padding(.horizontal, 8)
+                        .cornerRadius(10)
+                        .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                        // Se aplican insets para dar un espacio moderado entre filas
+                        .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
                     }
                 }
             }
-            .padding(.bottom, 8)
-        }
-        .background(Color(.systemGray6))
-        .onAppear {
-            loadMaterials()
+            .listStyle(PlainListStyle())
+            .navigationBarTitle("Material List", displayMode: .inline)
+            .onAppear {
+                loadMaterials()
+            }
+            .background(Color(.systemGray6).ignoresSafeArea())
         }
     }
     
@@ -90,8 +91,29 @@ struct MaterialListView: View {
             Material(
                 reference: data.material,
                 quantity: Int(data.deliveryQty) ?? 0,
-                unit: data.unit ?? "Nil"
+                unit: data.unit ?? "N/A"
             )
         }
+    }
+}
+
+// Preview con datos de ejemplo
+struct MaterialListView_Previews: PreviewProvider {
+    // Modelo de datos ficticio para simular TrackingData
+    struct DummyTrackingData: Identifiable {
+        let id = UUID()
+        let material: String
+        let deliveryQty: String
+        let unit: String?
+    }
+    
+    static var previews: some View {
+        let dummyData = [
+            DummyTrackingData(material: "Aluminio", deliveryQty: "20", unit: "kg"),
+            DummyTrackingData(material: "Madera", deliveryQty: "15", unit: "pcs")
+        ]
+        
+        // Para la preview se realiza una conversión, considerando que DummyTrackingData y TrackingData tienen la misma interfaz
+        MaterialListView(trackingData: dummyData as! [TrackingData])
     }
 }

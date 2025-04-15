@@ -84,6 +84,7 @@ struct InsertToolingView: View {
         VStack(spacing: 20) {
             // Encabezado (logo + título)
             VStack {
+                Banner()
                 Image(systemName: "shippingbox.fill")
                     .resizable()
                     .scaledToFit()
