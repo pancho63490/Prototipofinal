@@ -25,9 +25,9 @@ struct TrackingData: Codable, Identifiable {
         case container = "CONTAINER"
         case src = "SRC"
         case unit = "UNIT"
-        case pesoBruto = "Peso_bruto"
-        case pesoNeto = "Peso_neto"
-        case grouping = "Grouping_number"
+        case pesoBruto = "Peso_bruto"     // <-- corregido
+        case pesoNeto = "Peso_neto" 
+        case grouping = "GROUPING_NUMBER"
     }
 }
 

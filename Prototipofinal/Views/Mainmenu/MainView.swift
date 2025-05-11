@@ -3,49 +3,63 @@ struct GroupingInputView: View {
     @Binding var grouping: String
     var confirmAction: () -> Void
     var cancelAction: () -> Void
-    
+
+    @State private var isScanning: Bool = false
+
     var body: some View {
         NavigationView {
             ZStack {
-                // Fondo neutro y sutil con color gris claro
                 Color(.systemGray6)
                     .ignoresSafeArea()
-                
+
                 VStack(spacing: 25) {
                     Banner()
-                    // Título centralizado con tipografía moderna
-                    Text("Ingrese el número de Grouping / Tracking para asignar a todos los materiales.")
+
+                    Text("Enter the Grouping/Tracking number to assign to all materials.")
                         .font(.system(.headline, design: .rounded))
                         .foregroundColor(Color(.darkGray))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 30)
                         .padding(.top, 20)
-                    
-                    // Contenedor neutro para el TextField
+
                     VStack {
-                        TextField("Número de Grouping", text: $grouping)
+                        TextField("Grouping Number", text: $grouping)
                             .padding()
                             .background(Color.white)
                             .cornerRadius(10)
                             .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 4)
                     }
                     .padding(.horizontal, 25)
-                    
+
+                    // Scan Code button
+                    Button(action: {
+                        isScanning = true
+                    }) {
+                        HStack {
+                            Image(systemName: "qrcode.viewfinder")
+                            Text("Scan Code")
+                                .font(.system(.body, design: .rounded))
+                        }
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
+                    .padding(.top, 10)
+
                     Spacer()
                 }
             }
             .navigationTitle("Grouping")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                // Botón de cancelar a la izquierda
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: cancelAction) {
-                        Text("Cancelar")
+                        Text("Cancel")
                             .font(.system(.body, design: .rounded))
                             .foregroundColor(Color(.darkGray))
                     }
                 }
-                // Botón de confirmar a la derecha
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: confirmAction) {
                         Text("OK")
@@ -54,9 +68,19 @@ struct GroupingInputView: View {
                     }
                 }
             }
+            // Present scanner sheet without auto-confirm
+            .sheet(isPresented: $isScanning) {
+                CameraScannerWrapperView(scannedCode: .constant(nil)) { code in
+                    // Update grouping but do not auto-confirm
+                    let trimmed = code.trimmingCharacters(in: .whitespacesAndNewlines)
+                    grouping = trimmed.replacingOccurrences(of: " ", with: "")
+                    isScanning = false
+                }
+                .edgesIgnoringSafeArea(.all)
+            }
         }
     }
-}
+} 
 
 // Nuevo banner minimalista y delgado
 struct Banner: View {
@@ -96,7 +120,7 @@ struct ContentView: View {
     @State private var showManualInsertionAlert = false
     @State private var navigateToLogisticsVerificationView = false
 
-    // NUEVO: Variables para la asignación de grouping/tracking consolidado
+    
     @State private var newGroupingValue = ""       // <–– Aquí guardaremos el valor unificado
     @State private var showGroupingSheet = false   // <–– Controla si se muestra la vista
 
@@ -360,6 +384,10 @@ struct ContentView: View {
             
             NavigationLink(destination: InsertToolingView()) {
                 Text("Insert Tooling")
+            }
+            .padding(.vertical, 8)
+            NavigationLink(destination: VerificarToolingView()) {
+                Text("Verification Tooling")
             }
             .padding(.vertical, 8)
             

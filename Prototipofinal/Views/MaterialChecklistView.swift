@@ -22,7 +22,7 @@ struct MaterialData: Codable {
     let Peso_bruto: Decimal?
     let TYPE_SHIPMENT: String?
     let VENDOR: String?
-    var Grouping : String?
+    var Grouping_number : String?
 }
 
 
@@ -308,7 +308,7 @@ struct MaterialChecklistView: View {
                     for idx in missingGroupingIndices {
                         // OJO: Cambia `finalDataToSend[idx].Grouping` de `let` a `var` en tu modelo.
                         // Debe ser `var Grouping: String?` para poder cambiarlo aquí.
-                        finalDataToSend[idx].Grouping = groupingText
+                        finalDataToSend[idx].Grouping_number = groupingText
                     }
                     showMissingGroupingSheet = false
                     // Mandar el request real
@@ -578,9 +578,8 @@ struct MaterialChecklistView: View {
                     Peso_bruto: track.pesoBruto,
                     TYPE_SHIPMENT: shipmentState.selectedInboundType ?? "Unknown",
                     VENDOR: track.supplierName,
-                    // Asegúrate de que sea var Grouping en tu modelo
-                    // y aquí se toma inicialmente de track.grouping
-                    Grouping: track.grouping
+                    
+                    Grouping_number: track.grouping
                 )
                 finalData.append(newItem)
                 
@@ -635,7 +634,7 @@ struct MaterialChecklistView: View {
                                 Peso_bruto: track.pesoBruto,
                                 TYPE_SHIPMENT: shipmentState.selectedInboundType ?? "Unknown",
                                 VENDOR: track.supplierName,
-                                Grouping: track.grouping
+                                Grouping_number: track.grouping
                             )
                             finalData.append(dummy)
                         }
@@ -650,7 +649,7 @@ struct MaterialChecklistView: View {
         // 4) Revisar si alguno de estos items tiene Grouping nulo o vacío.
         //    De ser así, guardamos sus índices y mostramos el sheet.
         let noGroupingIndices: [Int] = finalData.enumerated().compactMap { (offset, element) -> Int? in
-            if let g = element.Grouping, !g.trimmingCharacters(in: .whitespaces).isEmpty {
+            if let g = element.Grouping_number, !g.trimmingCharacters(in: .whitespaces).isEmpty {
                 // Ok, no falta grouping
                 return nil
             } else {

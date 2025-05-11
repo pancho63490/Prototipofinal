@@ -1,8 +1,17 @@
 import SwiftUI
 import UIKit
 
-// MARK: - Modelo de material (cada uno con sus campos)
-struct MaterialEntrytool: Identifiable {
+// MARK: - Extensión para agregar una cadena a Data
+extension Data {
+    mutating func appendString(_ string: String) {
+        if let data = string.data(using: .utf8) {
+            self.append(data)
+        }
+    }
+}
+
+// MARK: - Modelo de material
+struct MaterialEntrytool: Identifiable, Codable {
     let id = UUID()
     var material: String
     var uMeasure: String
@@ -12,8 +21,8 @@ struct MaterialEntrytool: Identifiable {
     var details: String
 }
 
-// MARK: - Vista para mostrar cada material de forma detallada y atractiva
-struct MaterialRow: View {
+// MARK: - Vista para mostrar cada material
+struct MaterialRow2: View {
     var material: MaterialEntrytool
 
     var body: some View {
@@ -27,14 +36,11 @@ struct MaterialRow: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
-            
-            // Campo de detalles (si no está vacío)
             if !material.details.isEmpty {
                 Text(material.details)
                     .font(.caption)
                     .foregroundColor(.gray)
             }
-            
             HStack {
                 Label("Qty: \(material.qty)", systemImage: "number")
                     .font(.caption)
@@ -53,44 +59,42 @@ struct MaterialRow: View {
     }
 }
 
-// MARK: - Vista principal (estilo ManualInsertionView)
+// MARK: - Vista principal de InsertToolingView
 struct InsertToolingView: View {
-    // Campos principales
     @State private var trackingNo = ""
-    @State private var vendor = ""
-    @State private var orderNumber = ""
-    @State private var date = Date()
-    
-    // Lista de materiales
-    @State private var materials: [MaterialEntrytool] = []
-    
-    // Fotos (máximo 3)
-    @State private var photos: [UIImage] = []
-    @State private var showImagePicker = false
-    @State private var tempSelectedImage: UIImage? = nil
-    
-    // Flag para abrir sheet de “Agregar Material”
-    @State private var isShowingAddMaterialSheet = false
-    
-    // Para manejar alertas y estado de carga
-    @State private var activeAlert: ActiveAlertType? = nil
-    @State private var isLoading = false
-    
-    // Para simular escáner en Tracking No o Vendor (si deseas)
-    @State private var isShowingTrackingScanner = false
-    @State private var isShowingVendorScanner = false
+       @State private var vendor = ""
+       @State private var orderNumber = ""
+       @State private var date = Date()
+       
+       // Materiales y fotos
+       @State private var materials: [MaterialEntrytool] = []
+       @State private var photos: [UIImage] = []
+       @State private var showImagePicker = false
+       @State private var tempSelectedImage: UIImage?
+       
+       // Estados de UI
+       @State private var isShowingAddMaterialSheet = false
+       @State private var isShowingTrackingScanner = false
+       @State private var isShowingVendorScanner = false
+       @State private var activeAlert: ActiveAlrte3?
+       @State private var isLoading = false
+       
+       // Parámetros de impresión
+       @State private var useCustomLabels = true
+       @State private var customLabels  = 1
+       @State private var showPrintSheet = false
+       @State private var objectIDsFromPrint: [String] = []
     
     var body: some View {
         VStack(spacing: 20) {
-            // Encabezado (logo + título)
+            // Encabezado
             VStack {
-                Banner()
+                Banner() // Define tu vista Banner en tu proyecto
                 Image(systemName: "shippingbox.fill")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 50, height: 50)
                     .foregroundColor(.blue)
-                
                 Text("XDOCK")
                     .font(.title)
                     .fontWeight(.bold)
@@ -100,85 +104,89 @@ struct InsertToolingView: View {
             
             ScrollView {
                 VStack(spacing: 20) {
-                    
-                    // MARK: - Sección: Delivery Information
+                    // Sección Delivery Information
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Delivery Information")
                             .font(.headline)
                             .foregroundColor(.gray)
-                        
-                        // Tracking No + Botón de Escáner (opcional)
                         HStack {
-                            CustomTextFieldWithIcon(
-                                icon: "doc.text",
-                                title: "Tracking No",
-                                text: $trackingNo
-                            )
-                            
+                            CustomTextFieldWithIcon(icon: "doc.text",
+                                                    title: "Tracking No",
+                                                    text: $trackingNo)
                             Button(action: {
                                 isShowingTrackingScanner = true
+                                print("DEBUG: Botón de escáner para Tracking No presionado.")
                             }) {
                                 Image(systemName: "camera")
                                     .foregroundColor(.blue)
                                     .padding()
                             }
                             .sheet(isPresented: $isShowingTrackingScanner) {
-                                CameraScannerWrapperView(
-                                    scannedCode: .constant(nil),
-                                    onCodeScanned: { code in
-                                        trackingNo = code
-                                        isShowingTrackingScanner = false
-                                    }
-                                )
+                                CameraScannerWrapperView(scannedCode: .constant(nil), onCodeScanned: { code in
+                                    trackingNo = code
+                                    isShowingTrackingScanner = false
+                                    print("DEBUG: Código escaneado para Tracking No: \(code)")
+                                })
                             }
                         }
-                        
-                        // Vendor + Botón de Escáner (opcional)
                         HStack {
-                            CustomTextFieldWithIcon(
-                                icon: "person.2.fill",
-                                title: "Vendor",
-                                text: $vendor
-                            )
-                            
+                            CustomTextFieldWithIcon(icon: "person.2.fill",
+                                                    title: "Vendor",
+                                                    text: $vendor)
                             Button(action: {
                                 isShowingVendorScanner = true
+                                print("DEBUG: Botón de escáner para Vendor presionado.")
                             }) {
                                 Image(systemName: "camera")
                                     .foregroundColor(.blue)
                                     .padding()
                             }
                             .sheet(isPresented: $isShowingVendorScanner) {
-                                CameraScannerWrapperView(
-                                    scannedCode: .constant(nil),
-                                    onCodeScanned: { code in
-                                        vendor = code
-                                        isShowingVendorScanner = false
-                                    }
-                                )
+                                CameraScannerWrapperView(scannedCode: .constant(nil), onCodeScanned: { code in
+                                    vendor = code
+                                    isShowingVendorScanner = false
+                                    print("DEBUG: Código escaneado para Vendor: \(code)")
+                                })
                             }
                         }
                     }
                     
-                    // MARK: - Sección: Materials List
+                    // BOTÓN DE IMPRESIÓN – la única parte que cambia
+                                    Button {
+                                        showPrintSheet = true
+                                    } label: {
+                                        Image(systemName: "printer.fill")
+                                            .foregroundColor(.green)
+                                            .padding()
+                                    }
+                                    .sheet(isPresented: $showPrintSheet) {
+                                        // Cantidad de etiquetas a imprimir
+                                        let qty = useCustomLabels ? max(customLabels, 1) : 1
+                                        PrintView(
+                                            referenceNumber: trackingNo,
+                                            trackingData:    [],      // en este flujo no enviamos materiales
+                                            customLabels:    qty,     // se pasa como qty
+                                            useCustomLabels: true,    // forzamos que use qty
+                                            finalObjectIDs:  $objectIDsFromPrint
+                                        )
+                                    }
+                    // Sección Materials
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Materials")
                             .font(.headline)
                             .foregroundColor(.gray)
-                        
                         if materials.isEmpty {
                             Text("No materials added yet.")
                                 .font(.caption)
                                 .foregroundColor(.gray)
                         } else {
                             ForEach(materials) { mat in
-                                MaterialRow(material: mat)
+                                MaterialRow2(material: mat)
                             }
                         }
-                        
-                        // Botón para agregar material
                         Button(action: {
                             isShowingAddMaterialSheet = true
+                            print("DEBUG: Botón 'Add Material' presionado.")
                         }) {
                             HStack {
                                 Image(systemName: "plus.circle.fill")
@@ -190,24 +198,20 @@ struct InsertToolingView: View {
                         }
                     }
                     
-                    // Sección: Order Number (opcional)
+                    // Sección Order Number
                     VStack(alignment: .leading, spacing: 16) {
-                        CustomTextFieldWithIcon(
-                            icon: "doc.text",
-                            title: "Order Number",
-                            text: $orderNumber
-                        )
+                        CustomTextFieldWithIcon(icon: "doc.text",
+                                                title: "Order Number",
+                                                text: $orderNumber)
                     }
                     
-                    // MARK: - Sección: Date and Photos
+                    // Sección Date and Photos
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Date and Photos")
                             .font(.headline)
                             .foregroundColor(.gray)
-                        
                         DatePicker("Date", selection: $date, displayedComponents: .date)
                             .datePickerStyle(.compact)
-                        
                         if !photos.isEmpty {
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 10) {
@@ -219,9 +223,9 @@ struct InsertToolingView: View {
                                                 .frame(width: 120, height: 120)
                                                 .clipped()
                                                 .cornerRadius(8)
-                                            
                                             Button(action: {
                                                 photos.remove(at: index)
+                                                print("DEBUG: Eliminada foto en índice: \(index)")
                                             }) {
                                                 Image(systemName: "xmark.circle.fill")
                                                     .imageScale(.large)
@@ -246,10 +250,10 @@ struct InsertToolingView: View {
                             }
                             .padding(.vertical, 5)
                         }
-                        
                         Button(action: {
                             if photos.count < 3 {
                                 showImagePicker = true
+                                print("DEBUG: Botón 'Take Photo' presionado.")
                             }
                         }) {
                             Text(photos.count < 3 ? "Take Photo" : "Maximum 3 Photos")
@@ -262,11 +266,15 @@ struct InsertToolingView: View {
                         }
                         .disabled(photos.count >= 3)
                     }
-                    
-                    // MARK: - Botón “Send”
+                    PrintingView(useCustomLabels: $useCustomLabels,
+                                          customLabels: $customLabels)
+                                 .padding(.horizontal, 20)
+                        
+                    // Botón Send
                     Button(action: {
                         hideKeyboard()
                         activeAlert = .confirmation
+                        print("DEBUG: Botón 'Send' presionado. Se abre alerta de confirmación.")
                     }) {
                         Text("Send")
                             .frame(maxWidth: .infinity)
@@ -287,34 +295,28 @@ struct InsertToolingView: View {
             }
         }
         .navigationTitle("Insert Tooling")
-        .alert(item: $activeAlert) { alertType in
-            switch alertType {
+        .alert(item: $activeAlert) { alert in
+            switch alert {
             case .confirmation:
                 return Alert(
                     title: Text("Are you sure?"),
                     message: Text("Do you want to send this data?"),
                     primaryButton: .destructive(Text("Send")) {
-                        submitData()
+                        print("DEBUG: Confirmación -> Enviando datos.")
+                        submitDataMultipart()
                     },
                     secondaryButton: .cancel()
                 )
             case .success(let message):
-                return Alert(
-                    title: Text("Success"),
-                    message: Text(message),
-                    dismissButton: .default(Text("OK"))
-                )
+                return Alert(title: Text("Success"), message: Text(message), dismissButton: .default(Text("OK")))
             case .error(let message):
-                return Alert(
-                    title: Text("Error"),
-                    message: Text(message),
-                    dismissButton: .default(Text("OK"))
-                )
+                return Alert(title: Text("Error"), message: Text(message), dismissButton: .default(Text("OK")))
             }
         }
         .sheet(isPresented: $showImagePicker, onDismiss: {
             if let image = tempSelectedImage {
                 photos.append(image)
+                print("DEBUG: Foto añadida. Total fotos: \(photos.count)")
                 tempSelectedImage = nil
             }
         }) {
@@ -325,111 +327,131 @@ struct InsertToolingView: View {
         }
     }
     
-    // MARK: - Funciones
+    // MARK: - Función para crear body multipart/form-data
+    func createMultipartBody(parameters: [String: String], images: [UIImage], boundary: String) -> Data {
+        print("DEBUG: Creando body multipart con \(images.count) imágenes y parámetros: \(parameters)")
+        var body = Data()
+        let lineBreak = "\r\n"
+        // Agregar parámetros
+        for (key, value) in parameters {
+            body.appendString("--\(boundary)\(lineBreak)")
+            body.appendString("Content-Disposition: form-data; name=\"\(key)\"\(lineBreak + lineBreak)")
+            body.appendString("\(value)\(lineBreak)")
+        }
+        // Agregar imágenes usando el campo "photos"
+        for (index, image) in images.enumerated() {
+            guard let imageData = image.jpegData(compressionQuality: 0.8) else { continue }
+            let filename = "photo\(index).jpg"
+            print("DEBUG: Agregando imagen \(filename).")
+            body.appendString("--\(boundary)\(lineBreak)")
+            body.appendString("Content-Disposition: form-data; name=\"photos\"; filename=\"\(filename)\"\(lineBreak)")
+            body.appendString("Content-Type: image/jpeg\(lineBreak + lineBreak)")
+            body.append(imageData)
+            body.appendString(lineBreak)
+        }
+        body.appendString("--\(boundary)--\(lineBreak)")
+        return body
+    }
     
-    /// Envía la información al endpoint de Bosch
-    private func submitData() {
-        // Validación básica antes de enviar
-        if trackingNo.isEmpty || vendor.isEmpty || materials.isEmpty {
+    // MARK: - Función para enviar datos al endpoint UpdateReceiving
+    private func submitDataMultipart() {
+        // Validación básica: trackingNo, vendor y al menos un material
+        guard !trackingNo.isEmpty, !vendor.isEmpty, !materials.isEmpty else {
+            print("DEBUG: Validación falló: trackingNo, vendor o materials vacíos.")
             activeAlert = .error("Please complete all required fields.")
             return
         }
         
         isLoading = true
         
-        // 1) Generar el JSON que se va a enviar
-        let jsonString = generateJSON()
+        // Convertir fecha a String con formato "yyyy-MM-dd"
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let dateStr = formatter.string(from: date)
         
-        // 2) Configurar la URL de tu API
+        // Serializar materiales a JSON
+        var materialsJSON = ""
+        do {
+            let materialDicts = materials.map { material in
+                return [
+                    "material": material.material,
+                    "uMeasure": material.uMeasure,
+                    "qty": material.qty,
+                    "grossWeight": material.grossWeight,
+                    "netWeight": material.netWeight,
+                    "details": material.details
+                ]
+            }
+            let jsonData = try JSONSerialization.data(withJSONObject: materialDicts, options: [])
+            materialsJSON = String(data: jsonData, encoding: .utf8) ?? ""
+        } catch {
+            print("DEBUG: Error al serializar materiales: \(error.localizedDescription)")
+            activeAlert = .error("Error processing materials data.")
+            isLoading = false
+            return
+        }
+        
+        // Parámetros para el servidor
+        let parameters: [String: String] = [
+            "trackingNo": trackingNo,
+            "vendor": vendor,
+            "orderNumber": orderNumber,
+            "date": dateStr,
+            "materials": materialsJSON
+        ]
+        
+        print("DEBUG: Enviando datos con parámetros: \(parameters)")
+        let boundary = "Boundary-\(UUID().uuidString)"
+        
         guard let url = URL(string: "https://ews-emea.api.bosch.com/Api_XDock/api/updatereceiving") else {
+            print("DEBUG: URL no válida.")
             activeAlert = .error("Invalid API URL.")
             isLoading = false
             return
         }
         
-        // 3) Construir el URLRequest
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        let bodyData = createMultipartBody(parameters: parameters, images: photos, boundary: boundary)
+        print("DEBUG: Body multipart creado, tamaño: \(bodyData.count) bytes.")
+        request.httpBody = bodyData
         
-        // Si tu API requiere autenticación con token, descomenta y agrega tu token:
-        // request.setValue("Bearer TU_TOKEN_AQUI", forHTTPHeaderField: "Authorization")
-        
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = jsonString.data(using: .utf8)
-        
-        // 4) Hacer la petición usando URLSession
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 self.isLoading = false
-                
-                // Manejo de errores de conexión
                 if let error = error {
+                    print("DEBUG: Error de red: \(error.localizedDescription)")
                     self.activeAlert = .error("Error: \(error.localizedDescription)")
                     return
                 }
-                
-                // Verificación de la respuesta HTTP
                 guard let httpResponse = response as? HTTPURLResponse else {
+                    print("DEBUG: No se recibió respuesta del servidor.")
                     self.activeAlert = .error("No response from server.")
                     return
                 }
-                
-                // Si el status code es 200, consideramos que es un éxito
+                print("DEBUG: Código de estado HTTP: \(httpResponse.statusCode)")
                 if httpResponse.statusCode == 200 {
-                    self.activeAlert = .success("Data sent successfully.")
-                    // Limpiar campos tras envío exitoso
+                    print("DEBUG: Solicitud exitosa (200).")
+                    self.activeAlert = .success("Datos de recepción actualizados correctamente.")
                     self.clearFields()
                 } else {
-                    // Manejo de códigos de error
+                    print("DEBUG: El servidor devolvió el status code \(httpResponse.statusCode).")
                     self.activeAlert = .error("Server returned status code \(httpResponse.statusCode).")
                 }
             }
         }.resume()
     }
     
+    // MARK: - Función para limpiar campos tras envío exitoso
     private func clearFields() {
+        print("DEBUG: Limpiando campos tras envío exitoso.")
         trackingNo = ""
         vendor = ""
         orderNumber = ""
         date = Date()
         materials.removeAll()
         photos.removeAll()
-    }
-    
-    private func generateJSON() -> String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        let dateStr = dateFormatter.string(from: date)
-        
-        let photosBase64 = photos.compactMap {
-            $0.jpegData(compressionQuality: 0.8)?.base64EncodedString()
-        }
-        
-        let materialsArray: [[String: Any]] = materials.map { mat in
-            [
-                "material": mat.material,
-                "uMeasure": mat.uMeasure,
-                "qty": mat.qty,
-                "grossWeight": mat.grossWeight,
-                "netWeight": mat.netWeight,
-                "details": mat.details
-            ]
-        }
-        
-        let jsonDict: [String: Any] = [
-            "trackingNo": trackingNo,
-            "vendor": vendor,
-            "orderNumber": orderNumber,
-            "date": dateStr,
-            "materials": materialsArray,
-            "photos": photosBase64
-        ]
-        
-        if let jsonData = try? JSONSerialization.data(withJSONObject: jsonDict, options: .prettyPrinted),
-           let jsonString = String(data: jsonData, encoding: .utf8) {
-            return jsonString
-        }
-        return "Error generating JSON"
     }
 }
 
@@ -438,7 +460,6 @@ struct AddMaterialSheet: View {
     @Environment(\.presentationMode) var presentationMode
     @Binding var materials: [MaterialEntrytool]
     
-    // Campos para nuevo material
     @State private var material = ""
     @State private var uMeasure = ""
     @State private var qty = ""
@@ -446,13 +467,11 @@ struct AddMaterialSheet: View {
     @State private var netWeight = ""
     @State private var details = ""
     
-    // Escáneres en caso de necesitarlos
     @State private var showingMaterialScanner = false
     @State private var showingQtyScanner = false
     @State private var showingGrossScanner = false
     @State private var showingNetScanner = false
     
-    // Validador de números
     let numberFormatter: NumberFormatter = {
         let f = NumberFormatter()
         f.numberStyle = .decimal
@@ -462,131 +481,104 @@ struct AddMaterialSheet: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
-                // Material + Botón Escáner
                 HStack {
-                    CustomTextFieldWithIcon(
-                        icon: "barcode.viewfinder",
-                        title: "Material",
-                        text: $material
-                    )
+                    CustomTextFieldWithIcon(icon: "barcode.viewfinder",
+                                            title: "Material",
+                                            text: $material)
                     Button(action: {
                         showingMaterialScanner = true
+                        print("DEBUG: Botón de escáner para Material presionado.")
                     }) {
                         Image(systemName: "camera")
                             .foregroundColor(.blue)
                             .padding()
                     }
                     .sheet(isPresented: $showingMaterialScanner) {
-                        CameraScannerWrapperView(
-                            scannedCode: .constant(nil),
-                            onCodeScanned: { code in
-                                material = code
-                                showingMaterialScanner = false
-                            }
-                        )
+                        CameraScannerWrapperView(scannedCode: .constant(nil), onCodeScanned: { code in
+                            material = code
+                            showingMaterialScanner = false
+                            print("DEBUG: Código escaneado para Material: \(code)")
+                        })
                     }
                 }
-                
-                // UMeasure
-                CustomTextFieldWithIcon(
-                    icon: "ruler",
-                    title: "U Measure",
-                    text: $uMeasure
-                )
-                
-                // Cantidad + Escáner
+                CustomTextFieldWithIcon(icon: "ruler",
+                                        title: "U Measure",
+                                        text: $uMeasure)
                 HStack {
-                    CustomTextFieldWithIcon(
-                        icon: "number",
-                        title: "Quantity",
-                        text: $qty,
-                        keyboardType: .decimalPad
-                    )
+                    CustomTextFieldWithIcon(icon: "number",
+                                            title: "Quantity",
+                                            text: $qty,
+                                            keyboardType: .decimalPad)
                     Button(action: {
                         showingQtyScanner = true
+                        print("DEBUG: Botón de escáner para Quantity presionado.")
                     }) {
                         Image(systemName: "camera")
                             .foregroundColor(.blue)
                             .padding()
                     }
                     .sheet(isPresented: $showingQtyScanner) {
-                        CameraScannerWrapperView(
-                            scannedCode: .constant(nil),
-                            onCodeScanned: { code in
-                                if let _ = numberFormatter.number(from: code) {
-                                    qty = code
-                                }
-                                showingQtyScanner = false
+                        CameraScannerWrapperView(scannedCode: .constant(nil), onCodeScanned: { code in
+                            if let _ = numberFormatter.number(from: code) {
+                                qty = code
                             }
-                        )
+                            showingQtyScanner = false
+                            print("DEBUG: Código escaneado para Qty: \(code)")
+                        })
                     }
                 }
-                
-                // Gross Weight + Escáner
                 HStack {
-                    CustomTextFieldWithIcon(
-                        icon: "scalemass",
-                        title: "Gross Weight",
-                        text: $grossWeight,
-                        keyboardType: .decimalPad
-                    )
+                    CustomTextFieldWithIcon(icon: "scalemass",
+                                            title: "Gross Weight",
+                                            text: $grossWeight,
+                                            keyboardType: .decimalPad)
                     Button(action: {
                         showingGrossScanner = true
+                        print("DEBUG: Botón de escáner para Gross Weight presionado.")
                     }) {
                         Image(systemName: "camera")
                             .foregroundColor(.blue)
                             .padding()
                     }
                     .sheet(isPresented: $showingGrossScanner) {
-                        CameraScannerWrapperView(
-                            scannedCode: .constant(nil),
-                            onCodeScanned: { code in
-                                if let _ = numberFormatter.number(from: code) {
-                                    grossWeight = code
-                                }
-                                showingGrossScanner = false
+                        CameraScannerWrapperView(scannedCode: .constant(nil), onCodeScanned: { code in
+                            if let _ = numberFormatter.number(from: code) {
+                                grossWeight = code
                             }
-                        )
+                            showingGrossScanner = false
+                            print("DEBUG: Código escaneado para Gross Weight: \(code)")
+                        })
                     }
                 }
-                
-                // Net Weight + Escáner
                 HStack {
-                    CustomTextFieldWithIcon(
-                        icon: "scalemass.fill",
-                        title: "Net Weight",
-                        text: $netWeight,
-                        keyboardType: .decimalPad
-                    )
+                    CustomTextFieldWithIcon(icon: "scalemass.fill",
+                                            title: "Net Weight",
+                                            text: $netWeight,
+                                            keyboardType: .decimalPad)
                     Button(action: {
                         showingNetScanner = true
+                        print("DEBUG: Botón de escáner para Net Weight presionado.")
                     }) {
                         Image(systemName: "camera")
                             .foregroundColor(.blue)
                             .padding()
                     }
                     .sheet(isPresented: $showingNetScanner) {
-                        CameraScannerWrapperView(
-                            scannedCode: .constant(nil),
-                            onCodeScanned: { code in
-                                if let _ = numberFormatter.number(from: code) {
-                                    netWeight = code
-                                }
-                                showingNetScanner = false
+                        CameraScannerWrapperView(scannedCode: .constant(nil), onCodeScanned: { code in
+                            if let _ = numberFormatter.number(from: code) {
+                                netWeight = code
                             }
-                        )
+                            showingNetScanner = false
+                            print("DEBUG: Código escaneado para Net Weight: \(code)")
+                        })
                     }
                 }
-                
-                // Nuevo campo: Details
-                CustomTextFieldWithIcon(
-                    icon: "info.circle",
-                    title: "Details",
-                    text: $details
-                )
-                
-                // Botón "Add"
-                Button(action: addMaterial) {
+                CustomTextFieldWithIcon(icon: "info.circle",
+                                        title: "Details",
+                                        text: $details)
+                Button(action: {
+                    addMaterial()
+                }) {
                     Text("Add")
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -595,27 +587,27 @@ struct AddMaterialSheet: View {
                         .cornerRadius(8)
                 }
                 .disabled(camposInvalidos())
-                
                 Spacer()
             }
             .padding()
             .navigationTitle("Add Material")
             .navigationBarItems(trailing: Button("Cancel") {
                 presentationMode.wrappedValue.dismiss()
+                print("DEBUG: Cancelar AddMaterialSheet.")
             })
         }
     }
     
     private func addMaterial() {
-        let newMat = MaterialEntrytool(
-            material: material,
-            uMeasure: uMeasure,
-            qty: qty,
-            grossWeight: grossWeight,
-            netWeight: netWeight,
-            details: details
-        )
+        print("DEBUG: Botón 'Add' presionado en AddMaterialSheet.")
+        let newMat = MaterialEntrytool(material: material,
+                                       uMeasure: uMeasure,
+                                       qty: qty,
+                                       grossWeight: grossWeight,
+                                       netWeight: netWeight,
+                                       details: details)
         materials.append(newMat)
+        print("DEBUG: Material agregado: \(newMat.material), total: \(materials.count)")
         presentationMode.wrappedValue.dismiss()
     }
     
@@ -633,7 +625,7 @@ struct AddMaterialSheet: View {
     }
 }
 
-// MARK: - Vistas de ayuda (escáner, textfields, etc.)
+// MARK: - Vistas de apoyo
 
 struct CustomTextFieldWithIcon: View {
     var icon: String
@@ -657,40 +649,6 @@ struct CustomTextFieldWithIcon: View {
     }
 }
 
-struct CustomTextField: View {
-    let title: String
-    @Binding var text: String
-    let systemImage: String
-    var keyboardType: UIKeyboardType = .default
-    
-    var body: some View {
-        HStack {
-            Image(systemName: systemImage)
-                .foregroundColor(.gray)
-            TextField(title, text: $text)
-                .keyboardType(keyboardType)
-                .autocapitalization(.none)
-        }
-        .padding(10)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-        )
-    }
-}
-
-// MARK: - Preview
-struct InsertToolingView_Previews: PreviewProvider {
-    static var previews: some View {
-        InsertToolingView()
-    }
-}
-
-func hideKeyboard() {
-    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
-                                    to: nil, from: nil, for: nil)
-}
-
 // MARK: - ImagePicker para tomar fotos
 struct ImagePicker: UIViewControllerRepresentable {
     @Environment(\.presentationMode) var presentationMode
@@ -701,10 +659,13 @@ struct ImagePicker: UIViewControllerRepresentable {
         let picker = UIImagePickerController()
         picker.sourceType = sourceType
         picker.delegate = context.coordinator
+        print("DEBUG: ImagePicker inicializado, sourceType: \(sourceType)")
         return picker
     }
     
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) { }
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {
+        print("DEBUG: updateUIViewController de ImagePicker llamado.")
+    }
     
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -715,20 +676,53 @@ struct ImagePicker: UIViewControllerRepresentable {
         
         init(_ parent: ImagePicker) {
             self.parent = parent
+            print("DEBUG: ImagePicker.Coordinator inicializado.")
         }
         
-        func imagePickerController(
-            _ picker: UIImagePickerController,
-            didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]
-        ) {
+        func imagePickerController(_ picker: UIImagePickerController,
+                                   didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+            print("DEBUG: didFinishPickingMediaWithInfo llamado.")
             if let image = info[.originalImage] as? UIImage {
                 parent.selectedImage = image
+                print("DEBUG: Imagen seleccionada: \(image.size)")
             }
             parent.presentationMode.wrappedValue.dismiss()
         }
         
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            print("DEBUG: ImagePicker cancelado por el usuario.")
             parent.presentationMode.wrappedValue.dismiss()
         }
+    }
+}
+
+// MARK: - ActiveAlrte3 para alertas personalizadas
+enum ActiveAlrte3: Identifiable {
+    case confirmation, success(String), error(String)
+    
+    var id: String {
+        switch self {
+        case .confirmation:
+            return "confirmation"
+        case .success(let msg):
+            return "success-\(msg)"
+        case .error(let msg):
+            return "error-\(msg)"
+        }
+    }
+}
+
+// MARK: - Función para ocultar el teclado
+func hideKeyboard() {
+    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                    to: nil, from: nil, for: nil)
+}
+
+
+
+// MARK: - Previews
+struct InsertToolingView_Previews: PreviewProvider {
+    static var previews: some View {
+        InsertToolingView()
     }
 }
