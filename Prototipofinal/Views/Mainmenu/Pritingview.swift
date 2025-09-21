@@ -27,7 +27,7 @@ struct PrintingView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
-                // TextField con estilo personalizado para números
+                
                 TextField("Enter quantity", value: $customLabels, formatter: numberFormatter)
                     .keyboardType(.numberPad)
                     .padding(8)
@@ -41,15 +41,14 @@ struct PrintingView: View {
             .background(Color(.systemBackground))
             .cornerRadius(8)
             
-            // Se puede agregar un mensaje explicativo o separador si se requiere
+            
          Text("Select a quantity to print your custom labels")
         }
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
-        .padding()  // Padding exterior para que no se pegue al borde de la pantalla
-        // Mantenemos el Toggle oculto, ya que su valor afecta la UI
+        .padding()
         .overlay(
             Toggle("", isOn: $useCustomLabels)
                 .hidden()

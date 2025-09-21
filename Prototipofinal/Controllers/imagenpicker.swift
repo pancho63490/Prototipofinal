@@ -133,7 +133,7 @@ struct DocumentCameraView: UIViewControllerRepresentable {
             return quantity
         }
 
-        // Método para extraer el primer número que encuentre en una cadena
+       
         func extractNumber(from text: String) -> String? {
             let numberPattern = "\\d+"
             do {

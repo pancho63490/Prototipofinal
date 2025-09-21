@@ -22,7 +22,7 @@ struct NewFormView: View {
                         .font(.largeTitle)
                         .bold()
                     
-                    // Campos del formulario
+              
                     Group {
                         TextField("Tracking Number", text: $trackingNumber)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -109,12 +109,12 @@ struct NewFormView: View {
                 CameraPicker { image in
                     if let image = image, capturedImages.count < 5 {
                         capturedImages.append(image)
-                        // Si se capturan más de dos imágenes, se utiliza menor calidad (mayor compresión)
+                       
                         let quality: CGFloat = capturedImages.count > 2 ? 0.5 : 0.8
                         if let jpegData = image.jpegData(compressionQuality: quality) {
                             let base64String = jpegData.base64EncodedString()
                             base64Images.append(base64String)
-                            // Imprime sólo los primeros 50 caracteres y la longitud total para depuración.
+                         
                             print("Base64 Preview: \(String(base64String.prefix(50))) (Length: \(base64String.count))")
                         }
                     }
@@ -136,7 +136,7 @@ struct NewFormView: View {
             "TrackingNumber": trackingNumber,
             "Carrier": carrier,
             "Fecha": dateString,
-            "Files": base64Images, // Se envía como arreglo de strings Base64.
+            "Files": base64Images, 
             "Vendor": vendor
         ]
         

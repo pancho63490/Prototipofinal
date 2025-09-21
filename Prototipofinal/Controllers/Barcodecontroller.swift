@@ -136,10 +136,10 @@ struct CameraScannerWrapperView: View {
                 .frame(width: 350, height: 150)
                 .position(
                     x: UIScreen.main.bounds.midX,
-                    y: UIScreen.main.bounds.midY - 65 // Adjust vertically to center
+                    y: UIScreen.main.bounds.midY - 65
                 )
 
-            // Cancel button at the bottom center
+         
             VStack {
                 Spacer()
                 Button(action: {

@@ -11,17 +11,17 @@ enum ScanMethod {
 struct ObjectInfo {
     let objectID: String
     let material: String
-    var totalQuantity: Int // Campo mutable para la cantidad total
-    var remainingQuantity: Int // Campo mutable para la cantidad restante
+    var totalQuantity: Int
+    var remainingQuantity: Int
     var location: String
-    var subItems: [SubItem] = [] // Lista de subitems (materiales y cantidades adicionales)
+    var subItems: [SubItem] = []
 
     // Inicializador
     init(objectID: String, material: String, totalQuantity: Int, location: String) {
         self.objectID = objectID
         self.material = material
         self.totalQuantity = totalQuantity
-        self.remainingQuantity = totalQuantity // Inicializamos el subtotal con la cantidad total
+        self.remainingQuantity = totalQuantity
         self.location = location
     }
 }
@@ -57,12 +57,12 @@ struct GroupedObject: Identifiable {
     let material: String  // Solo un material por Object ID
     var location: String?
     var totalQuantity: Int
-    var remainingQuantity: Int // Nuevo campo para cantidad restante
+    var remainingQuantity: Int
     let bill: String
-    let invoiceNumber: String?  // Propiedad opcional
-    let quantity: String?       // Propiedad opcional
-    var deliveryType: String?   // Asegúrate de que esta propiedad exista
-    var subItems: [SubItem] = [] // Lista de subitems
+    let invoiceNumber: String?
+    let quantity: String?
+    var deliveryType: String?
+    var subItems: [SubItem] = []
 
     // Inicializador completo
     init(objectID: Int, material: String, location: String, totalQuantity: Int, bill: String, invoiceNumber: String? = nil, quantity: String? = nil, deliveryType: String? = nil) {
@@ -80,7 +80,7 @@ struct GroupedObject: Identifiable {
 
 
 
-// Modelo para los subitems (para futuras expansiones)
+
 struct SubItem: Identifiable {
     let id = UUID()
     let material: String

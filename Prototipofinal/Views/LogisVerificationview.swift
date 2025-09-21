@@ -126,7 +126,7 @@ struct LogisticsVerificationView: View {
                                             return
                                         }
                                         
-                                        // Si hay un tracking previo y no está todo verificado, pedimos confirmación
+                                       
                                         if let current = selectedTrackingData,
                                            !allItemsVerified() {
                                             // Comprobamos si cambió a un tracking distinto
@@ -159,14 +159,13 @@ struct LogisticsVerificationView: View {
                                             .font(.headline)
                                             .padding(.bottom, 5)
                                         
-                                        // Scroll horizontal para no desbordar si las columnas son muy anchas
+                                       
                                         ScrollView(.horizontal, showsIndicators: false) {
-                                            // Ajustamos espaciados y alineaciones a gusto
+                   
                                             Grid(alignment: .topLeading,
                                                  horizontalSpacing: 10,
                                                  verticalSpacing: 10) {
-                                                
-                                                // 6 columnas: 5 datos + 1 check
+                                        
                                                 GridRow {
                                                     Text("ObjectID").fontWeight(.bold)
                                                     Text("Material").fontWeight(.bold)
@@ -300,7 +299,7 @@ struct LogisticsVerificationView: View {
                             }
                         },
                         secondaryButton: .cancel {
-                            // Revertimos el picker al valor anterior
+                            
                             tempSelectedTrackingData = selectedTrackingData
                         }
                     )

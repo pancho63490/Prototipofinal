@@ -3,14 +3,14 @@ import SwiftUI
 struct AppHeader: View {
     var body: some View {
         VStack(spacing: 4) {
-            // Ícono en blanco, sin animación
+            
             Image(systemName: "shippingbox.fill")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 36, height: 36)
                 .foregroundColor(.white)
 
-            // Títulos
+    
             Text("XDOCK")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundColor(.white)

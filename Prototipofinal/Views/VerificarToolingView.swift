@@ -113,13 +113,13 @@ class VerificarToolingViewModel: ObservableObject {
             selectedMaterials.removeValue(forKey: materialID)
             selectionOrder.removeAll { $0 == materialID }
         } else {
-            selectedMaterials[materialID] = 0 // Initialize with 0 quantity
-            selectionOrder.append(materialID) // Track order
+            selectedMaterials[materialID] = 0
+            selectionOrder.append(materialID)
         }
     }
 
     func editObjectAssignment(_ objectID: String) {
-        // Save current state before editing
+  
         preEditState = (assignedObjects, remainingMaterials)
         isEditing = true
         
@@ -128,7 +128,7 @@ class VerificarToolingViewModel: ObservableObject {
         
         if let assigned = assignedObjects[objectID] {
             selectedMaterials = assigned
-            // Temporarily return materials to available pool
+            
             for (matID, qty) in assigned {
                 remainingMaterials[matID, default: 0] += qty
                 if !selectionOrder.contains(matID) {

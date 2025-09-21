@@ -25,8 +25,8 @@ struct TrackingData: Codable, Identifiable {
         case container = "CONTAINER"
         case src = "SRC"
         case unit = "UNIT"
-        case pesoBruto = "Peso_bruto"     // <-- corregido
-        case pesoNeto = "Peso_neto" 
+        case pesoBruto = "Peso_bruto"
+        case pesoNeto = "Peso_neto"
         case grouping = "GROUPING_NUMBER"
     }
 }
@@ -35,7 +35,7 @@ struct DeliveryResponse: Codable {
     let found: Bool
     let deliveries: [TrackingData]?
 
-    // En caso de que la respuesta también incluya un mensaje de error
+
     let message: String?
 
     enum CodingKeys: String, CodingKey {

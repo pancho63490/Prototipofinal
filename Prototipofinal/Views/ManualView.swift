@@ -2,11 +2,11 @@ import SwiftUI
 
 /// Enum para manejar los diferentes tipos de alerta que podemos mostrar
 enum ActiveAlertType: Identifiable {
-    case confirmation       // Para "¿Estás seguro?"
-    case success(String)    // Para mostrar mensajes de éxito
-    case error(String)      // Para mostrar mensajes de error
+    case confirmation
+    case success(String)
+    case error(String)
     
-    // Necesario para conformar al protocolo Identifiable
+
     var id: Int {
         switch self {
         case .confirmation:
@@ -20,7 +20,7 @@ enum ActiveAlertType: Identifiable {
 }
 
 struct ManualInsertionView: View {
-    // State variables para la entrega y el proveedor
+   
     @State private var externalDeliveryID = ""
     @State private var supplierName = ""
     
@@ -35,10 +35,10 @@ struct ManualInsertionView: View {
     // Indicador de carga
     @State private var isLoading = false
     
-    // Manejo de la alerta unificada
+    
     @State private var activeAlert: ActiveAlertType? = nil
     
-    // Environment para navegar o cerrar la vista
+ 
     @Environment(\.presentationMode) var presentationMode
     
     var body: some View {

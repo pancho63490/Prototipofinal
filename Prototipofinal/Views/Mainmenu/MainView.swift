@@ -93,12 +93,12 @@ struct Banner: View {
     }
 }
 
-// ContentView completa con estilo minimalista
+
 struct ContentView: View {
-    // Objeto global para "Inbond" / "Domestic"
+
     @EnvironmentObject var shipmentState: ShipmentState
 
-    // Campo de entrada (se usa para uno o más números de referencia)
+ 
     @State private var referenceNumber = ""
     @State private var selectedShipmentType = "More Information"
     @State private var shouldNavigateToPrint = false
@@ -121,8 +121,8 @@ struct ContentView: View {
     @State private var navigateToLogisticsVerificationView = false
 
     
-    @State private var newGroupingValue = ""       // <–– Aquí guardaremos el valor unificado
-    @State private var showGroupingSheet = false   // <–– Controla si se muestra la vista
+    @State private var newGroupingValue = ""
+    @State private var showGroupingSheet = false
 
     // NUEVO: Controla la visibilidad del menú lateral
     @State private var showSideMenu = false
@@ -135,11 +135,9 @@ struct ContentView: View {
             ZStack {
                 // MARK: - Contenido Principal
                 VStack(spacing: 8) {
-                    // Banner y encabezado
+                   
                     Banner()
                     AppHeader()
-                    
-                    // Campo de texto con gestión de espacios y opciones de escaneo
                     ReferenceInputView(referenceNumber: $referenceNumber, isScanning: $isScanning)
                         .padding(.horizontal, 8)
                         .onSubmit { initiateNewSearch() }
@@ -204,7 +202,7 @@ struct ContentView: View {
                             .onAppear { navigateToLogisticsVerificationView = true }
                     }
                 }
-                // Fin del Contenido Principal
+              
                 
                 // MARK: - Menú Lateral (Side Menu)
                 if showSideMenu {
@@ -296,7 +294,7 @@ struct ContentView: View {
                 }
                 .edgesIgnoringSafeArea(.all)
             }
-            // NUEVO: hoja para asignar grouping/tracking unificado en caso de múltiples referencias o impresión
+            
             .sheet(isPresented: $showGroupingSheet) {
                 GroupingInputView(
                     grouping: $newGroupingValue,
@@ -343,7 +341,7 @@ struct ContentView: View {
 
     // MARK: - Vistas Auxiliares
 
-    /// Vista para la opción "More Information"
+    
     private var moreInformationView: some View {
         Group {
             if isLoading {
@@ -420,7 +418,7 @@ struct ContentView: View {
             return
         }
         
-        // Si ya hay datos, revisamos si falta grouping
+
         if let apiData = apiResponse, !apiData.isEmpty {
             // Checamos si hay al menos un item sin grouping o grouping vacío
             let missingGrouping = storedTrackingData.contains { item in
@@ -428,14 +426,14 @@ struct ContentView: View {
             }
             
             if missingGrouping {
-                // Pedimos el grouping
+              
                 showGroupingSheet = true
             } else {
                 // Todos tienen grouping, vamos directo a imprimir
                 shouldNavigateToPrint = true
             }
         } else {
-            // Si no hay datos, hay que hacer la búsqueda primero
+        
             initiateNewSearch()
         }
     }

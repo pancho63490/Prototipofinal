@@ -12,7 +12,6 @@ struct TrackingData3 {
     let timestamp: Date
 }
 
-// Conversión express ➜ rellena lo que PrintView NO usa
 extension TrackingData {
     init(from t: TrackingData3) {
         self.externalDeliveryID = ""

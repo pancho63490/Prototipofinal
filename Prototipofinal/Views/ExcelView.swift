@@ -17,9 +17,7 @@ struct FileDataItem: Identifiable, Codable {
 }
 
 // MARK: - Parser XML para extraer FileData (múltiples elementos)
-// (En este ejemplo suponemos que la respuesta de archivos es JSON, pero si fuera XML se podría usar otro parser.)
-//
-// Si tu API retorna XML, adapta este parser. En este ejemplo usamos JSON para los archivos.
+
 class FileDataParser: NSObject, XMLParserDelegate {
     var currentElement: String = ""
     var files: [FileDataItem] = []
@@ -86,7 +84,7 @@ class FileDataParser: NSObject, XMLParserDelegate {
 
 // MARK: - Modelos para Materiales
 struct MaterialData3: Identifiable, Codable {
-    // Se genera automáticamente un UUID; no se espera recibirlo en el JSON.
+ 
     var id = UUID()
     var Material: String
     var Quantity: String
@@ -178,7 +176,7 @@ struct ExcelRenderView: View {
     var body: some View {
         NavigationView {
             VStack {
-                // Campo de búsqueda
+                
                 HStack {
                     TextField("Ingrese número de referencia...", text: $searchText)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -223,16 +221,7 @@ struct ExcelRenderView: View {
                         .foregroundColor(.gray)
                     Spacer()
                 }
-                
-                // (Opcional) Vista de previsualización del Excel, si se desea implementarla:
-                /*
-                if let fileURL = ... {
-                    ExcelPreview(fileURL: fileURL)
-                        .edgesIgnoringSafeArea(.all)
-                }
-                */
-                
-                // NavigationLink para mostrar la vista editable de materiales
+            
                 NavigationLink(
                     destination: MaterialsListView(materials: $materials),
                     isActive: $showMaterialsView,

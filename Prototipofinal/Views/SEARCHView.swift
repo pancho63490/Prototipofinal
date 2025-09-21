@@ -34,7 +34,7 @@ struct DeliverySearchView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Optional banner view at the top, if you have one defined
+          
             Banner()
             
             NavigationView {
@@ -54,7 +54,7 @@ struct DeliverySearchView: View {
                     }
                     .padding()
                     
-                    // Loading indicator or error message display
+                 
                     if isLoading {
                         ProgressView("Loading...")
                     } else if let errorMessage = errorMessage {
@@ -63,7 +63,7 @@ struct DeliverySearchView: View {
                             .padding()
                     }
                     
-                    // List of search results
+              
                     List(deliveries) { delivery in
                         VStack(alignment: .leading, spacing: 4) {
                             Text("External Delivery: \(delivery.externalDeliveryID)")

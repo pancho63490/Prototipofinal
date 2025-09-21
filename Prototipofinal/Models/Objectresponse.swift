@@ -1,6 +1,6 @@
 import Foundation
 
-struct ObjectIDResponse: Decodable { // Cambiado de Codable a Decodable
+struct ObjectIDResponse: Decodable {
     let message: String
     let objectIDs: [Int]?
     
@@ -14,7 +14,7 @@ struct ObjectIDResponse: Decodable { // Cambiado de Codable a Decodable
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        // Decodificar el mensaje, manejando ambas variantes
+        
         if let msg = try? container.decode(String.self, forKey: .messageUpper) {
             message = msg
         } else if let msg = try? container.decode(String.self, forKey: .messageLower) {
@@ -23,7 +23,7 @@ struct ObjectIDResponse: Decodable { // Cambiado de Codable a Decodable
             message = ""
         }
         
-        // Decodificar los Object IDs, manejando ambas variantes si es necesario
+        
         if let ids = try? container.decode([Int].self, forKey: .objectIDs) {
             objectIDs = ids
         } else if let ids = try? container.decode([Int].self, forKey: .objectIDsAlternative) {
@@ -34,7 +34,7 @@ struct ObjectIDResponse: Decodable { // Cambiado de Codable a Decodable
     }
 }
 
-struct BackupObjectIDResponse: Decodable { // Cambiado de Codable a Decodable
+struct BackupObjectIDResponse: Decodable {
     let message: String
     let objectIDs: [Int]?
     
@@ -48,7 +48,7 @@ struct BackupObjectIDResponse: Decodable { // Cambiado de Codable a Decodable
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        // Decodificar el mensaje, manejando ambas variantes
+        
         if let msg = try? container.decode(String.self, forKey: .messageUpper) {
             message = msg
         } else if let msg = try? container.decode(String.self, forKey: .messageLower) {
@@ -57,7 +57,7 @@ struct BackupObjectIDResponse: Decodable { // Cambiado de Codable a Decodable
             message = ""
         }
         
-        // Decodificar los Object IDs, manejando ambas variantes si es necesario
+        
         if let ids = try? container.decode([Int].self, forKey: .objectIDs) {
             objectIDs = ids
         } else if let ids = try? container.decode([Int].self, forKey: .objectIDsAlternative) {

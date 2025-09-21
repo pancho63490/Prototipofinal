@@ -10,8 +10,7 @@ struct Material: Identifiable {
 
 struct MaterialListView: View {
     @State private var materials: [Material] = []
-    var trackingData: [TrackingData]  // Se asume TrackingData con propiedades 'material', 'deliveryQty' y 'unit'
-    
+    var trackingData: [TrackingData] 
     var body: some View {
         NavigationView {
             List {
@@ -20,7 +19,7 @@ struct MaterialListView: View {
                         .font(.footnote)
                         .foregroundColor(.gray)
                         .frame(maxWidth: .infinity, alignment: .center)
-                        // Se usa un pequeño inset para el mensaje
+                      
                         .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
                         .listRowBackground(Color.clear)
                 } else {
@@ -37,7 +36,7 @@ struct MaterialListView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 6))
                             
                             VStack(alignment: .leading, spacing: 6) {
-                                // Referencia en fuente subheadline para resaltar
+                            
                                 Text(material.reference)
                                     .font(.subheadline)
                                     .foregroundColor(.primary)
@@ -85,7 +84,7 @@ struct MaterialListView: View {
         }
     }
     
-    // Carga la información proveniente de TrackingData en el modelo local 'materials'
+    
     func loadMaterials() {
         materials = trackingData.map { data in
             Material(
@@ -97,9 +96,9 @@ struct MaterialListView: View {
     }
 }
 
-// Preview con datos de ejemplo
+
 struct MaterialListView_Previews: PreviewProvider {
-    // Modelo de datos ficticio para simular TrackingData
+  
     struct DummyTrackingData: Identifiable {
         let id = UUID()
         let material: String
@@ -113,7 +112,7 @@ struct MaterialListView_Previews: PreviewProvider {
             DummyTrackingData(material: "Madera", deliveryQty: "15", unit: "pcs")
         ]
         
-        // Para la preview se realiza una conversión, considerando que DummyTrackingData y TrackingData tienen la misma interfaz
+    
         MaterialListView(trackingData: dummyData as! [TrackingData])
     }
 }

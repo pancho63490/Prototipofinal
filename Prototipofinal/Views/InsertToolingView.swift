@@ -89,7 +89,7 @@ struct InsertToolingView: View {
         VStack(spacing: 20) {
             // Encabezado
             VStack {
-                Banner() // Define tu vista Banner en tu proyecto
+                Banner()
                 Image(systemName: "shippingbox.fill")
                     .resizable()
                     .scaledToFit()
@@ -151,7 +151,7 @@ struct InsertToolingView: View {
                         }
                     }
                     
-                    // BOTÓN DE IMPRESIÓN – la única parte que cambia
+                
                                     Button {
                                         showPrintSheet = true
                                     } label: {
@@ -164,9 +164,9 @@ struct InsertToolingView: View {
                                         let qty = useCustomLabels ? max(customLabels, 1) : 1
                                         PrintView(
                                             referenceNumber: trackingNo,
-                                            trackingData:    [],      // en este flujo no enviamos materiales
-                                            customLabels:    qty,     // se pasa como qty
-                                            useCustomLabels: true,    // forzamos que use qty
+                                            trackingData:    [],
+                                            customLabels:    qty,
+                                            useCustomLabels: true,
                                             finalObjectIDs:  $objectIDsFromPrint
                                         )
                                     }
@@ -338,7 +338,7 @@ struct InsertToolingView: View {
             body.appendString("Content-Disposition: form-data; name=\"\(key)\"\(lineBreak + lineBreak)")
             body.appendString("\(value)\(lineBreak)")
         }
-        // Agregar imágenes usando el campo "photos"
+      
         for (index, image) in images.enumerated() {
             guard let imageData = image.jpegData(compressionQuality: 0.8) else { continue }
             let filename = "photo\(index).jpg"

@@ -6,7 +6,7 @@ struct BarcodeScannerView: View {
     
     var body: some View {
         ZStack {
-            // Incluir el CameraScannerView para que la cámara esté activa
+           
             CameraScannerView(scannedCode: $scannedCode, onCodeScanned: { code in
                 // Se activa cuando se detecta un código
                 self.scannedCode = code
@@ -14,13 +14,13 @@ struct BarcodeScannerView: View {
             })
             .edgesIgnoringSafeArea(.all)
             
-            // Recuadro verde en el centro de la pantalla
+       
             Rectangle()
                 .stroke(Color.green, lineWidth: 3)
                 .frame(width: 350, height: 150)
                 .position(x: UIScreen.main.bounds.midX, y: UIScreen.main.bounds.midY - 100)
             
-            // Mostrar el código escaneado en pantalla
+        
             if let code = scannedCode {
                 VStack {
                     Spacer()
@@ -39,7 +39,7 @@ struct BarcodeScannerView: View {
                 title: Text("Scanned Code"),
                 message: Text(scannedCode ?? "N/A"),
                 dismissButton: .default(Text("OK")) {
-                    // Reiniciar la sesión de captura después de cerrar la alerta
+                   
                     scannedCode = nil
                 }
             )

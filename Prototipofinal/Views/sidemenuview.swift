@@ -6,7 +6,7 @@ struct SideMenuView: View {
 
     var body: some View {
         ZStack {
-            // Capa semitransparente para oscurecer el contenido principal.
+            
             if isMenuOpen {
                 Color.black.opacity(0.2)
                     .ignoresSafeArea()
@@ -65,10 +65,10 @@ struct SideMenuView: View {
                 }
                 .padding(.horizontal, 16)
                 .frame(width: UIScreen.main.bounds.width * 0.35)
-                // Usamos el color del sistema para mayor coherencia minimalista
+           
                 .background(Color(UIColor.systemBackground))
                 .edgesIgnoringSafeArea(.all)
-                // El desplazamiento del menú depende de su estado
+               
                 .offset(x: isMenuOpen ? 0 : -UIScreen.main.bounds.width * 0.35)
                 .animation(.easeInOut(duration: 0.3), value: isMenuOpen)
                 

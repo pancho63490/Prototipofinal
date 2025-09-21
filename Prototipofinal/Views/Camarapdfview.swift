@@ -5,7 +5,7 @@ import Vision
 struct CameraView: View {
     @State private var recognizedText: String = ""
     @State private var showAlert: Bool = false
-    @State private var scannedImages: [UIImage] = [] // Almacena las imágenes escaneadas
+    @State private var scannedImages: [UIImage] = [] 
     @State private var showDocumentCamera = false
     @State private var isDocumentScanning = false 
 
