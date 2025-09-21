@@ -395,6 +395,10 @@ struct ContentView: View {
                 Text("Search")
             }
             .padding(.vertical, 8)
+            NavigationLink(destination: ReprintObView()) {
+                Text("Reprint")
+            }
+            .padding(.vertical, 8)
             
             Spacer()
         }
