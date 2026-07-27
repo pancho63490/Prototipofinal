@@ -21,7 +21,7 @@ struct CameraView: View {
                         Image(uiImage: image)
                             .resizable()
                             .scaledToFit()
-                            .frame(height: 300)
+                            .frame(height: 301)
                             .padding()
                     }
                 }
